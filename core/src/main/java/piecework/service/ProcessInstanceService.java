@@ -175,7 +175,7 @@ public class ProcessInstanceService {
         SearchCriteria.Builder executionCriteriaBuilder =
                 new SearchCriteria.Builder(rawQueryParameters, allowedProcesses, FacetFactory.facetMap(allowedProcesses), sanitizer);
 
-        executionCriteriaBuilder.processStatus(Constants.ProcessStatuses.ALL);
+//        executionCriteriaBuilder.processStatus(Constants.ProcessStatuses.ALL);
         executionCriteriaBuilder.pageSize(50000);
 
         if (!allowedProcesses.isEmpty()) {

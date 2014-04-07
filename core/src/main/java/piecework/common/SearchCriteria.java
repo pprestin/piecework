@@ -36,25 +36,10 @@ public class SearchCriteria {
     private final Set<String> processDefinitionKeys;
     private final Set<String> engines;
     private final Set<String> engineProcessDefinitionKeys;
-//    private final Set<String> processInstanceIds;
-//    private final String businessKey;
-//    private final String processDefinitionLabel;
-//    private final String processInstanceLabel;
-//    private final String applicationStatus;
-//    private final String applicationStatusExplanation;
     private final String processStatus;
     private final String taskStatus;
     private final List<String> keywords;
     private final List<String> executionIds;
-//    private final Boolean complete;
-//    private final Boolean suspended;
-//    private final Boolean cancelled;
-//    private final Boolean queued;
-//    private final Boolean all;
-//    private final Date startedBefore;
-//    private final Date startedAfter;
-//    private final Date completedBefore;
-//    private final Date completedAfter;
     private final String initiatedBy;
     private final Integer pageNumber;
     private final Integer pageSize;
@@ -71,27 +56,12 @@ public class SearchCriteria {
 
     private SearchCriteria(Builder builder) {
         this.processDefinitionKeys = Collections.unmodifiableSet(builder.processDefinitionKeys);
-//        this.processInstanceIds = Collections.unmodifiableSet(builder.processInstanceIds);
         this.engines = builder.engines != null ? Collections.unmodifiableSet(builder.engines) : Collections.<String>emptySet();
         this.engineProcessDefinitionKeys = Collections.unmodifiableSet(builder.engineProcessDefinitionKeys);
-//        this.businessKey = builder.businessKey;
-//        this.applicationStatus = builder.applicationStatus;
-//        this.applicationStatusExplanation = builder.applicationStatusExplanation;
         this.processStatus = builder.processStatus;
         this.taskStatus = builder.taskStatus;
-//        this.processDefinitionLabel = builder.processDefinitionLabel;
-//        this.processInstanceLabel = builder.processInstanceLabel;
         this.keywords = Collections.unmodifiableList(builder.keywords);
         this.executionIds = builder.executionIds;
-//        this.complete = builder.complete;
-//        this.cancelled = builder.cancelled;
-//        this.queued = builder.queued;
-//        this.suspended = builder.suspended;
-//        this.all = builder.all;
-//        this.startedBefore = builder.startedBefore;
-//        this.startedAfter = builder.startedAfter;
-//        this.completedBefore = builder.completedBefore;
-//        this.completedAfter = builder.completedAfter;
         this.initiatedBy = builder.initiatedBy;
         this.pageNumber = builder.page;
         this.pageSize= builder.pageSize;
@@ -107,10 +77,6 @@ public class SearchCriteria {
         return processDefinitionKeys;
     }
 
-//    public Set<String> getProcessInstanceIds() {
-//        return processInstanceIds;
-//    }
-
     public Set<String> getEngines() {
         return engines;
     }
@@ -118,26 +84,6 @@ public class SearchCriteria {
     public Set<String> getEngineProcessDefinitionKeys() {
         return engineProcessDefinitionKeys;
     }
-
-//    public String getBusinessKey() {
-//        return businessKey;
-//    }
-//
-//    public String getApplicationStatus() {
-//        return applicationStatus;
-//    }
-//
-//    public String getApplicationStatusExplanation() {
-//        return applicationStatusExplanation;
-//    }
-//
-//    public String getProcessDefinitionLabel() {
-//        return processDefinitionLabel;
-//    }
-//
-//    public String getProcessInstanceLabel() {
-//        return processInstanceLabel;
-//    }
 
     public String getProcessStatus() {
         return processStatus;
@@ -169,42 +115,6 @@ public class SearchCriteria {
         return executionIds;
     }
 
-//    public Boolean getComplete() {
-//        return complete;
-//    }
-//
-//    public Boolean getSuspended() {
-//        return suspended;
-//    }
-//
-//    public Boolean getCancelled() {
-//        return cancelled;
-//    }
-//
-//    public Boolean getQueued() {
-//        return queued;
-//    }
-//
-//    public Boolean getAll() {
-//        return all;
-//    }
-//
-//    public Date getStartedBefore() {
-//        return startedBefore;
-//    }
-//
-//    public Date getStartedAfter() {
-//        return startedAfter;
-//    }
-//
-//    public Date getCompletedBefore() {
-//        return completedBefore;
-//    }
-//
-//    public Date getCompletedAfter() {
-//        return completedAfter;
-//    }
-
     public String getInitiatedBy() {
         return initiatedBy;
     }
@@ -212,18 +122,6 @@ public class SearchCriteria {
     public List<FacetSort> getSortBy() {
         return sortBy;
     }
-
-//    public List<FacetSort> getQueryableSortBy() {
-//        List<FacetSort> filtered = new ArrayList<FacetSort>();
-//        if (sortBy != null) {
-//            for (FacetSort facetSort : sortBy) {
-//                if (facetSort.getFacet() instanceof SearchFacet)
-//                    filtered.add(facetSort);
-//            }
-//        }
-//
-//        return filtered;
-//    }
 
     public List<FacetSort> getPostQuerySortBy() {
         List<FacetSort> filtered = new ArrayList<FacetSort>();

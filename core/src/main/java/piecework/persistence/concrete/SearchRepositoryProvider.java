@@ -316,7 +316,7 @@ public class SearchRepositoryProvider implements SearchProvider {
             Collections.reverse(postQuerySortBy);
             for (FacetSort facetSort : postQuerySortBy) {
                 Collections.sort(data, new DataFilterFacetComparator(facetSort.getFacet()));
-                if (facetSort.getDirection().equals(Sort.Direction.ASC))
+                if (facetSort.getDirection().equals(Sort.Direction.DESC))
                     Collections.reverse(data);
             }
         }

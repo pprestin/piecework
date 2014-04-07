@@ -1688,10 +1688,12 @@
 
                         scope.exportCsv = function() {
                             var url = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.application.criteria.processDefinitionKey;
-                            if (scope.application.criteria.lastModifiedAfter != null)
-                                url += '&startedAfter=' + scope.application.criteria.lastModifiedAfter;
+                            if (scope.application.criteria.processStatus != null)
+                                url += "&processStatus=" + scope.application.criteria.processStatus;
+                            if (scope.application.criteria.lastModifiedTimeAfter != null)
+                                url += '&lastModifiedTimeAfter=' + scope.application.criteria.lastModifiedTimeAfter;
                             if (scope.application.criteria.lastModifiedBefore != null)
-                                url += '&startedBefore=' + scope.application.criteria.lastModifiedBefore;
+                                url += '&lastModifiedTimeBefore=' + scope.application.criteria.lastModifiedTimeBefore;
                             $window.location.href = url;
                         };
 

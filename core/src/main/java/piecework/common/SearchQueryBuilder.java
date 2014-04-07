@@ -60,8 +60,6 @@ public class SearchQueryBuilder {
 
         query.addCriteria(where("processDefinitionKey").in(filteredProcessDefinitionKeys));
 
-//        List<String> sortBy = searchCriteria.getSortBy();
-
         Map<SearchFacet, Object> facetParameters = searchCriteria.getFacetParameters();
         if (facetParameters != null && !facetParameters.isEmpty()) {
             for (Map.Entry<SearchFacet, Object> entry : facetParameters.entrySet()) {
@@ -74,49 +72,13 @@ public class SearchQueryBuilder {
             }
         }
 
-//        if (!searchCriteria.getProcessInstanceIds().isEmpty())
-//            query.addCriteria(where("processInstanceId").in(searchCriteria.getProcessInstanceIds()));
-//        if (StringUtils.isNotEmpty(searchCriteria.getBusinessKey()))
-//            query.addCriteria(where("alias").is(searchCriteria.getBusinessKey()));
-//        if (StringUtils.isNotEmpty(searchCriteria.getProcessDefinitionLabel()))
-//            query.addCriteria(where("processDefinitionLabel").regex(searchCriteria.getProcessDefinitionLabel(), "i"));
-//        if (StringUtils.isNotEmpty(searchCriteria.getProcessInstanceLabel()))
-//            query.addCriteria(where("processInstanceLabel").regex(searchCriteria.getProcessInstanceLabel(), "i"));
-//        if (StringUtils.isNotBlank(searchCriteria.getApplicationStatus()))
-//            query.addCriteria(where("applicationStatus").is(searchCriteria.getApplicationStatus()));
-//        if (StringUtils.isNotBlank(searchCriteria.getApplicationStatusExplanation()))
-//            query.addCriteria(where("applicationStatus").regex(searchCriteria.getApplicationStatusExplanation(), "i"));
-//
         if (StringUtils.isNotBlank(searchCriteria.getProcessStatus())) {
             if (!searchCriteria.getProcessStatus().equalsIgnoreCase("all"))
                 query.addCriteria(where("processStatus").is(searchCriteria.getProcessStatus()));
         }
 
-//        } else if (searchCriteria.getComplete() != null && searchCriteria.getComplete().booleanValue())
-//            query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.COMPLETE));
-//        else if (searchCriteria.getSuspended() != null && searchCriteria.getSuspended().booleanValue())
-//            query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.SUSPENDED));
-//        else if (searchCriteria.getCancelled() != null && searchCriteria.getCancelled().booleanValue())
-//            query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.CANCELLED));
-//        else if (searchCriteria.getQueued() != null && searchCriteria.getQueued().booleanValue())
-//            query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.QUEUED));
-//        else if (searchCriteria.getAll() == null || !searchCriteria.getAll().booleanValue())
-//            query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.OPEN));
-
         if (StringUtils.isNotEmpty(searchCriteria.getInitiatedBy()))
             query.addCriteria(where("initiatorId").is(searchCriteria.getInitiatedBy()));
-
-//        if (searchCriteria.getStartedBefore() != null && searchCriteria.getStartedAfter() != null)
-//            query.addCriteria(where("startTime").lt(searchCriteria.getStartedBefore()).gt(searchCriteria.getStartedAfter()));
-//        else if (searchCriteria.getStartedBefore() != null)
-//            query.addCriteria(where("startTime").lt(searchCriteria.getStartedBefore()));
-//        else if (searchCriteria.getStartedAfter() != null)
-//            query.addCriteria(where("startTime").gt(searchCriteria.getStartedAfter()));
-
-//        if (searchCriteria.getCompletedBefore() != null)
-//            query.addCriteria(where("endTime").lt(searchCriteria.getCompletedBefore()));
-//        if (searchCriteria.getCompletedAfter() != null)
-//            query.addCriteria(where("endTime").gt(searchCriteria.getCompletedAfter()));
 
         if (!searchCriteria.getKeywords().isEmpty()) {
             List<String> tokens = new ArrayList<String>();
@@ -137,10 +99,6 @@ public class SearchQueryBuilder {
             if (count > 0)
                 query.addCriteria(criteria.all(dbObjects));
         }
-
-//        Pageable pageable = SearchUtility.pageable(searchCriteria, sanitizer);
-        // Only apply sort for pageable, because we're counting tasks, not instances
-//        query.with(pageable);
 
         return query;
     }
