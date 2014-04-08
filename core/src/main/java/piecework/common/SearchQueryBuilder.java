@@ -60,6 +60,9 @@ public class SearchQueryBuilder {
 
         query.addCriteria(where("processDefinitionKey").in(filteredProcessDefinitionKeys));
 
+        if (StringUtils.isNotEmpty(searchCriteria.getProcessInstanceId()))
+            query.addCriteria(where("processInstanceId").is(searchCriteria.getProcessInstanceId()));
+
         Map<SearchFacet, Object> facetParameters = searchCriteria.getFacetParameters();
         if (facetParameters != null && !facetParameters.isEmpty()) {
             for (Map.Entry<SearchFacet, Object> entry : facetParameters.entrySet()) {

@@ -34,6 +34,7 @@ public class SearchCriteria {
     private static final Logger LOG = Logger.getLogger(SearchCriteria.class);
 
     private final Set<String> processDefinitionKeys;
+    private final String processInstanceId;
     private final Set<String> engines;
     private final Set<String> engineProcessDefinitionKeys;
     private final String processStatus;
@@ -56,6 +57,7 @@ public class SearchCriteria {
 
     private SearchCriteria(Builder builder) {
         this.processDefinitionKeys = Collections.unmodifiableSet(builder.processDefinitionKeys);
+        this.processInstanceId = builder.processInstanceId;
         this.engines = builder.engines != null ? Collections.unmodifiableSet(builder.engines) : Collections.<String>emptySet();
         this.engineProcessDefinitionKeys = Collections.unmodifiableSet(builder.engineProcessDefinitionKeys);
         this.processStatus = builder.processStatus;
@@ -75,6 +77,10 @@ public class SearchCriteria {
 
     public Set<String> getProcessDefinitionKeys() {
         return processDefinitionKeys;
+    }
+
+    public String getProcessInstanceId() {
+        return processInstanceId;
     }
 
     public Set<String> getEngines() {
@@ -156,6 +162,7 @@ public class SearchCriteria {
         private Set<String> processDefinitionKeys;
         private Set<String> engines;
         private Set<String> engineProcessDefinitionKeys;
+        private String processInstanceId;
 //        private Set<String> processInstanceIds;
 //        private String businessKey;
 //        private String processDefinitionLabel;
@@ -221,8 +228,8 @@ public class SearchCriteria {
                                 boolean isEngineParameter = true;
                                 if (key.equals("processDefinitionKey"))
                                     this.limitToProcessDefinitionKeys.add(value);
-//                                else if (key.equals("processInstanceId"))
-//                                    this.processInstanceIds.add(value);
+                                else if (key.equals("processInstanceId"))
+                                    this.processInstanceId = value;
 //                                else if (key.equals("complete"))
 //                                    this.complete = Boolean.valueOf(value);
 //                                else if (key.equals("cancelled"))
