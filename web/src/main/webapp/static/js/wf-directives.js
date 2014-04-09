@@ -1544,7 +1544,7 @@
                         '               <th style="white-space:nowrap">' +
                         '                   <div data-wf-column-header data-application="application" data-facet="application.facetMap[\'processInstanceLabel\']"></div>' +
                         '               </th>' +
-                        '               <th data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in application.state.selectedFacets" style="white-space:nowrap">' +
+                        '               <th data-ng-class="facet.required ? \'\' : \'hidden-xs\'" data-ng-repeat="facet in application.state.selectedFacets" style="white-space:nowrap">' +
                         '                   <div data-wf-column-header data-application="application" data-facet="facet"></div>' +
                         '               </th>' +
                         '            </tr>\n' +
@@ -1553,7 +1553,7 @@
                         '            <tr data-ng-repeat="form in application.forms">\n' +
                         '                <td><input data-ng-click="selectForm(form)" data-ng-checked="form.checked" type="checkbox" class="result-checkbox"/></td>\n' +
                         '                  <td><a href="{{form.link}}" target="_self" rel="external">{{form.processInstanceLabel}}</a></td>' +
-                        '                  <td data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in application.state.selectedFacets">{{form[facet.name]}}</td>' +
+                        '                  <td data-ng-class="facet.required ? \'\' : \'hidden-xs\'" data-ng-repeat="facet in application.state.selectedFacets">{{form[facet.name]}}</td>' +
                         '            </tr>\n' +
                         '            </tbody>' +
                         '           \n' +
