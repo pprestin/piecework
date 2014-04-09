@@ -177,8 +177,10 @@ public class UserInterfaceService {
             String fileName = FileUtility.resolveFilenameFromPath(uri.toString());
             ContentResource contentResource = fileSystemContentProvider.findByLocation(modelProvider, "file:" + fileName);
 
-            if (contentResource == null)
-                throw new NotFoundError();
+            if (contentResource == null) {
+                LOG.debug("No local file exists for this remote process page " + fileName + " - defaulting to just allow all data to be submitted");
+                return Collections.<Field>emptySet();
+            }
 
             InputStream inputStream = null;
             try {

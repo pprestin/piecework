@@ -163,6 +163,15 @@ public class Task implements Serializable, Comparable<Task> {
         if (entityId == null)
             return false;  // no signed in user
 
+        if (entity != null) {
+            if (entity.getEntityType() == Entity.EntityType.SYSTEM) {
+                Entity actingAs = entity.getActingAs();
+
+                if (actingAs != null && StringUtils.isNotEmpty(actingAs.getEntityId()))
+                    entityId = actingAs.getEntityId();
+            }
+        }
+
         // Check to see if the user is the assignee
         String assigneeId = getAssigneeId();
         if (StringUtils.isNotEmpty(assigneeId) && entityId.equals(assigneeId))

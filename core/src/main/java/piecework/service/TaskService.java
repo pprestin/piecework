@@ -141,8 +141,8 @@ public class TaskService {
         return taskProvider;
     }
 
-    public Task read(String rawProcessDefinitionKey, String rawTaskId, boolean limitToActive) throws PieceworkException {
-        TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, helper.getPrincipal());
+    public Task read(String rawProcessDefinitionKey, String rawTaskId, Entity principal, boolean limitToActive) throws PieceworkException {
+        TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, principal);
         return taskProvider.task(new ViewContext(settings, VERSION), limitToActive);
     }
 

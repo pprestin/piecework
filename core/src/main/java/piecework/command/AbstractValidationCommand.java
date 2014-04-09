@@ -24,6 +24,7 @@ import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
 import piecework.exception.InternalServerError;
 import piecework.exception.PieceworkException;
+import piecework.model.Entity;
 import piecework.model.FormRequest;
 import piecework.model.Submission;
 import piecework.model.Task;
@@ -94,8 +95,6 @@ public abstract class AbstractValidationCommand<P extends ProcessDeploymentProvi
             throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, "No action type provided");
         }
 
-//        boolean throwException = !ignoreThrowException && !UNEXCEPTIONAL_ACTION_TYPES.contains(validatedActionType);
-
         return validationFactory.validation(modelProvider, template, submission, version, !UNEXCEPTIONAL_ACTION_TYPES.contains(validatedActionType), ignoreThrowException);
     }
 
@@ -104,7 +103,9 @@ public abstract class AbstractValidationCommand<P extends ProcessDeploymentProvi
         if (task != null) {
             if (!task.isActive())
                 throw new BadRequestError(Constants.ExceptionCodes.active_task_required);
-            if (!task.isAssignee(modelProvider.principal()))
+
+            Entity principal = modelProvider.principal();
+            if (principal.getEntityType() != Entity.EntityType.SYSTEM && !task.isAssignee(principal))
                 throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
         }
         return task;
