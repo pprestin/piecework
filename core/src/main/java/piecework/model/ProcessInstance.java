@@ -81,7 +81,6 @@ public class ProcessInstance implements Serializable {
     private final String previousApplicationStatus;
 
     @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
-    @Indexed
     private final Map<String, List<Value>> data;
 
     @XmlJavaTypeAdapter(FormNameMessageMapAdapter.class)

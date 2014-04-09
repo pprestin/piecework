@@ -451,9 +451,10 @@ public abstract class AbstractFormResource {
                 switch (formDisposition.getType()) {
                     case REMOTE:
                         URI pageUri = formDisposition.getPageUri(request, validation, explanation, count);
-                        if (pageUri == null)
+                        if (pageUri == null && formDisposition.getHostUri() != null)
                             return Response.temporaryRedirect(formDisposition.getHostUri()).build();
-                        return Response.seeOther(pageUri).build();
+                        if (pageUri != null)
+                            return Response.seeOther(pageUri).build();
                     case CUSTOM:
                         return FormUtility.okResponse(settings, modelProvider, userInterfaceService.getCustomPageAsStreaming(modelProvider, form), MediaType.TEXT_HTML_TYPE.toString(), isAnonymous());
                 }
