@@ -13,6 +13,7 @@ angular.module('wf',
     .controller('SearchController', ['$filter', '$http', '$location', '$resource', '$sce', '$scope', '$window', 'localStorageService', 'fileUpload', 'wizardService',
         function($filter, $http, $location, $resource, $sce, scope, $window, localStorageService, fileUpload, formPageUri, formResourceUri, wizardService) {
             scope.application = {
+                initialized: false,  // init flag
                 bucketList: [],
                 criteria: {
                     keywords: [],
@@ -137,6 +138,9 @@ angular.module('wf',
                 });
             };
             var processMetadata = function(results) {
+                if ( scope.application.initialized ) {
+                    return;
+                }
                 scope.application.state.organizing = true;
                 scope.application.facets = results.facets;
                 scope.application.state.searching = false;
@@ -177,9 +181,11 @@ angular.module('wf',
                 });
                 refreshColumns();
                 scope.application.state.organizing = false;
+                scope.application.initialized = true;
             };
             var processData = function(results) {
 //                var results = response.data;
+                processMetadata(results);
                 scope.application.state.selectedForms = [];
                 scope.application.state.searching = false;
                 scope.application.criteria.sortBy = results.sortBy;
@@ -271,7 +277,7 @@ angular.module('wf',
                 localStorageService.set('state', scope.application.state);
             };
 
-            var model = $window.piecework.model;
+            var model = $window.piecework && $window.piecework.model ? $window.piecework.model : 'undefined';;
             if (typeof(model) !== 'undefined' && typeof(model.total) !== 'undefined') {
                 processMetadata(model);
                 delete model['data'];
