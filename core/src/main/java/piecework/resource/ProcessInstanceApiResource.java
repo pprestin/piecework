@@ -94,6 +94,11 @@ public interface ProcessInstanceApiResource extends ApiResource {
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     Response detach(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws PieceworkException;
 
+    @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/history")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    Response history(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
+
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})

@@ -29,9 +29,11 @@ import piecework.exception.PieceworkException;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.HistoryProvider;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.process.AttachmentQueryParameters;
 import piecework.resource.ProcessInstanceApiResource;
+import piecework.util.FormUtility;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -124,6 +126,12 @@ public class ProcessInstanceApiResourceVersion1 extends AbstractInstanceResource
     public Response detach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
         doDetach(context, rawProcessDefinitionKey, rawProcessInstanceId, rawAttachmentId, helper.getPrincipal());
         return Response.noContent().build();
+    }
+
+    @Override
+    public Response history(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
+        HistoryProvider historyProvider = modelProviderFactory.historyProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        return FormUtility.okResponse(settings, historyProvider, historyProvider.history(new ViewContext(settings, VERSION)), null, false);
     }
 
     @Override
