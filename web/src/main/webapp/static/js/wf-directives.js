@@ -459,10 +459,27 @@
                                     scope.dt = new Date(scope.form.data[scope.name]);
                             }
                         });
+
+                        // set focus on the date input element
+                        element.focus(function($event) {
+                           if ($event == null)
+                                return;
+                             var target = $event.target;
+                             if ( target && target.children[0] && target.children[0].children[0] ) {
+                                 target.children[0].children[0].focus();
+                             }    
+                        });  
+
+                        // hide date pop on tab
+                        scope.onKeyDown = function(event) {
+                            if ( event != null && event.keyCode == 9) { 
+                                scope.opened = false;
+                            }    
+                        }; 
                     },
                     template:
                         '<div class="input-group wf-datepicker-group">' +
-                        '   <input data-ng-keypress="onKeyUp($event)" data-ng-required="{{required}}" datepicker-popup="MM/dd/yyyy" data-ng-model="dt" datepicker-options="dateOptions" size="10" type="text" class="form-control wf-datepicker"  is-open="opened" min="minDate" max="maxDate" close-text="Close" show-weeks="false"/>' +
+                        '   <input data-ng-keypress="onKeyUp($event)" data-ng-keydown="onKeyDown($event)" data-ng-required="{{required}}" datepicker-popup="MM/dd/yyyy" data-ng-model="dt" datepicker-options="dateOptions" size="10" type="text" class="form-control wf-datepicker"  is-open="opened" min="minDate" max="maxDate" close-text="Close" show-weeks="false"/>' +
                         '   <input data-ng-value="dt|date:\'yyyy-MM-ddTHH:mm:ssZ\'" name="{{name}}" type="hidden">' +
                         '   <span class="input-group-addon">' +
                         '       <i class="fa fa-calendar" ng-click="clickDate($event)"></i>' +
