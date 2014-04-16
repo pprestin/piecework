@@ -60,6 +60,9 @@ public class ValidationFactory {
     @Autowired
     UserInterfaceSettings settings;
 
+    @Autowired
+    private ServiceLocator serviceLocator;
+
     public <P extends ProcessDeploymentProvider> Validation validation(P modelProvider, SubmissionTemplate template, Submission submission, String version, boolean onlyAcceptValidInputs, boolean ignoreException) throws PieceworkException {
         long time = 0;
 
@@ -74,6 +77,18 @@ public class ValidationFactory {
 
         Map<String, List<Message>> results = validation.getResults();
         if (!ignoreException && results != null && !results.isEmpty()) {
+            // [jira: EDMSIMPL-213] perform an implicit save of submitted data 
+            // so that user do not lose their work
+            Map<String, List<Value>> validationData = validation.getData();
+            String submissionLabel = submission != null ? submission.getProcessInstanceLabel() : null;
+            Process process = modelProvider.process();
+            ProcessInstance instance = ModelUtility.instance(modelProvider);
+            StorageManager storageManager = serviceLocator.getService(StorageManager.class);
+            if ( instance != null && storageManager != null ) { 
+                String label = ProcessInstanceUtility.processInstanceLabel(process, instance, validationData, submissionLabel);
+                storageManager.store(label, instance, validationData, submission);
+            }   
+
             // Throw an exception if the submitter needs to adjust the data
             throw new BadRequestError(validation);
         }
