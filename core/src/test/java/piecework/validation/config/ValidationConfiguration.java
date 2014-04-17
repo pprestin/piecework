@@ -15,6 +15,7 @@
  */
 package piecework.validation.config;
 
+import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -23,6 +24,8 @@ import piecework.security.config.DataFilterTestConfiguration;
 import piecework.security.data.DataFilterService;
 import piecework.security.config.EncryptionTestConfiguration;
 import piecework.validation.ValidationFactory;
+import piecework.manager.StorageManager;
+import piecework.ServiceLocator;
 
 /**
  * @author James Renfro
@@ -41,4 +44,11 @@ public class ValidationConfiguration {
         return new Versions();
     }
 
+    @Bean
+    public ServiceLocator serviceLocator() {
+        ServiceLocator serviceLocator = new ServiceLocator();
+        StorageManager mockStorageManager = Mockito.mock(StorageManager.class);
+        serviceLocator.setService(StorageManager.class, mockStorageManager);
+        return serviceLocator;
+    }   
 }
