@@ -39,6 +39,10 @@ public class E2eTestHelper {
     // use a hint from input data to decide ByName or ById to speed up findElement.
     // default is ByName.
     public static void fillForm(WebDriver driver, String[][] data) {
+        if ( driver == null || data == null ) {
+            return;
+        }
+
         //JavascriptExecutor jse = (JavascriptExecutor) driver;
         for ( String[] e : data ) { 
             String k = e[0];
@@ -72,13 +76,16 @@ public class E2eTestHelper {
                         }
                     }
                     String tagName = element.getTagName();
-                    String t = element.getAttribute("type");
+                    String t = element.getAttribute("type").toLowerCase();
+                    if ( t != null ) {
+                        t = t.toLowerCase();
+                    }
                     //System.out.println(k + "'s type =" + t);
                     if ( tagName.equals("input") ) {
                         if ( t.equals("hidden") ) {
                             WebElement e1 = element.findElement(By.xpath("../input[@data-ng-change]"));
                             e1.sendKeys(v);
-                        } else if ( t.equals("checkbox") ) {
+                        } else if ( t.equals("checkbox") || t.equals("submit") ) {
                             element.click();
                         } else if ( t.equals("radio") ) {
                             if ( v != null && !v.isEmpty() ) {
@@ -89,7 +96,7 @@ public class E2eTestHelper {
                             }
                         } else if ( t.equals("file") ) {
                             element.sendKeys(v);
-                            Thread.sleep(1000);   // for file upload 
+                            Thread.sleep(2000);   // for file upload 
                         } else {  // "text", "date", "datetime" etc.
                             //element.click();  // need this for field with maskedinput (another mask package), but messed up date picker on chrome
                             element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
@@ -234,7 +241,7 @@ public class E2eTestHelper {
         return dateFormat.format(new Date());
     }
 
-    public static void waitForUserLogin(WebDriver driver, String patialLoginStr, int timeoutInSeconds) {
+    public static void waitForUserLogin(WebDriver driver, String patialLoginStr, int timeoutInSeconds, String[][] login) {
         if ( driver == null || patialLoginStr == null || patialLoginStr.length() < 3 ) {
             return;
         }
@@ -246,6 +253,7 @@ public class E2eTestHelper {
         String url = driver.getCurrentUrl();
         System.out.println(url);
         if ( url.indexOf(patialLoginStr) > 0 ) { 
+            fillForm(driver, login);
             try {
                 for (int i=0; i<timeoutInSeconds && url.indexOf(patialLoginStr) > 0; ++i) {
                     url = driver.getCurrentUrl();
