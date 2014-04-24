@@ -558,6 +558,11 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
+        public Builder lastModifiedTime(Date lastModifiedTime) {
+            this.lastModifiedTime = lastModifiedTime;
+            return this;
+        }
+
         public Builder initiatorId(String initiatorId) {
             this.initiatorId = initiatorId;
             return this;

@@ -111,13 +111,17 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
 
         ContentResource stored = new BasicContentResource.Builder()
                 .contentId(contentId)
+                .name(contentResource.getName())
+                .filename(contentResource.getFilename())
+                .description(contentResource.getDescription())
                 .inputStream(inputStream)
+                .location(contentId)
                 .length(contentLength)
                 .lastModified(new Date())
 //                .md5(md5)
                 .build();
 
-        contentLocationMap.put(contentResource.getLocation(), stored);
+        contentLocationMap.put(stored.getLocation(), stored);
         contentMap.put(contentId, stored);
 
         return stored;

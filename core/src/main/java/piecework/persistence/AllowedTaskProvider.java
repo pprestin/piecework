@@ -35,7 +35,7 @@ public interface AllowedTaskProvider extends ProcessInstanceProvider {
 
     SearchResults attachments(AttachmentQueryParameters queryParameters, ViewContext context) throws PieceworkException;
 
-    ContentResource value(String fieldName, String fileId) throws PieceworkException;
+    ContentResource value(String fieldName, String fileId, long uploadDateMillis) throws PieceworkException;
 
     SearchResults values(String fieldName, ViewContext context) throws PieceworkException;
 

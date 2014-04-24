@@ -18,8 +18,10 @@ package piecework.service;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.SystemUser;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.CommandFactory;
@@ -329,6 +331,21 @@ public class ProcessService {
         resultsBuilder.total(Long.valueOf(processes.size()));
 
         return resultsBuilder.build();
+    }
+
+    public void synchronize(Process process, ProcessDeployment deployment, ContentResource resource) throws PieceworkException {
+        Entity principal = new SystemUser();
+        boolean migrateExisting = true;
+        try {
+            update(process.getProcessDefinitionKey(), process, principal);
+            updateAndPublishDeployment(process, deployment, resource, migrateExisting, principal);
+        } catch (MappingException mappingException) {
+            mappingException.printStackTrace();
+            LOG.fatal("Could not create GCA Final Report Checklist process because of a spring mapping exception", mappingException);
+        } catch (Exception e) {
+            create(process);
+            createAndPublishDeployment(process, deployment, resource, migrateExisting, principal);
+        }
     }
 
     public Process update(String rawProcessDefinitionKey, Process rawProcess, Entity principal) throws PieceworkException {

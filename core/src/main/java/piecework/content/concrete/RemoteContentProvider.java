@@ -21,6 +21,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
+import piecework.content.ContentProvider;
 import piecework.content.ContentResource;
 import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
@@ -39,7 +40,7 @@ import java.util.Set;
  * @author James Renfro
  */
 @Service
-public class RemoteContentProvider extends GridFSContentProviderReceiver {
+public class RemoteContentProvider implements ContentProvider {
 
     private static final Logger LOG = Logger.getLogger(RemoteContentProvider.class);
     private static final Set<String> VALID_URI_SCHEMES = Sets.newHashSet("http", "https");

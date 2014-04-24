@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
-import org.springframework.stereotype.Service;
 import piecework.common.UuidGenerator;
 import piecework.content.ContentProvider;
 import piecework.content.ContentReceiver;
@@ -45,6 +44,7 @@ import piecework.security.AccessTracker;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -52,7 +52,6 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 /**
  * @author James Renfro
  */
-@Service
 public class GridFSContentProviderReceiver implements ContentProvider, ContentReceiver {
 
     private static final Logger LOG = Logger.getLogger(GridFSContentProviderReceiver.class);
@@ -157,7 +156,22 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
     private GridFsContentResource gridFsContentResource(GridFSFile current, String location) throws NotFoundError {
         // Retrieve in ascending order, then reverse versions - this allows us to count up in an intuition way,
         // setting version numbers
-        List<GridFSDBFile> files = gridFsOperations.find(query(GridFsCriteria.whereFilename().is(location)).with(new Sort(Sort.Direction.ASC, "uploadDate")));
+        if (location == null)
+            return null;
+
+        List<GridFSDBFile> files;
+
+        Date uploadDate = null;
+        int indexOf = location.indexOf("?uploadDate=");
+        if (indexOf != -1) {
+            String uploadDateMillis = location.substring(indexOf+12);
+            uploadDate = new Date(Long.valueOf(uploadDateMillis));
+            location = location.substring(0, indexOf);
+            files = gridFsOperations.find(query(GridFsCriteria.whereFilename().is(location))
+                    .addCriteria(GridFsCriteria.where("uploadDate").is(uploadDate)));
+        } else {
+            files = gridFsOperations.find(query(GridFsCriteria.whereFilename().is(location)).with(new Sort(Sort.Direction.ASC, "uploadDate")));
+        }
         List<Version> versions = new ArrayList<Version>();
         GridFSFile latest = current;
         if (files != null && !files.isEmpty()) {
@@ -182,8 +196,10 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
         if (latest == null)
             throw new NotFoundError();
 
+        uploadDate = latest.getUploadDate();
+
         Collections.reverse(versions);
-        return new GridFsContentResource(gridFsOperations, latest, location, versions);
+        return new GridFsContentResource(gridFsOperations, latest, location, uploadDate, versions);
     }
 
 }

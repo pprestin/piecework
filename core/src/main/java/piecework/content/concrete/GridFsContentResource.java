@@ -19,6 +19,7 @@ import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
 import org.apache.commons.io.IOUtils;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import piecework.content.ContentResource;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -50,13 +52,15 @@ public class GridFsContentResource implements ContentResource {
     private final GridFSFile file;
     private final GridFsOperations gridFsOperations;
     private final String location;
+    private final Date uploadDate;
     private final DBObject metadata;
     private final List<Version> versions;
 
-    public GridFsContentResource(GridFsOperations gridFsOperations, GridFSFile file, String location, List<Version> versions) {
+    public GridFsContentResource(GridFsOperations gridFsOperations, GridFSFile file, String location, Date uploadDate, List<Version> versions) {
         this.gridFsOperations = gridFsOperations;
         this.file = file;
         this.location = location;
+        this.uploadDate = uploadDate;
         this.metadata = file.getMetaData();
         this.versions = versions;
     }
@@ -93,7 +97,10 @@ public class GridFsContentResource implements ContentResource {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(location)));
+        Query query = query(GridFsCriteria.whereFilename().is(location));
+        if (uploadDate != null)
+            query.addCriteria(GridFsCriteria.where("uploadDate").is(uploadDate));
+        GridFSDBFile file = gridFsOperations.findOne(query);
         return file.getInputStream();
     }
 

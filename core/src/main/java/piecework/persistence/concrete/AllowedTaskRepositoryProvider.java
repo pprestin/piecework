@@ -178,7 +178,7 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
     }
 
     @Override
-    public ContentResource value(String fieldName, String fileId) throws PieceworkException {
+    public ContentResource value(String fieldName, String fileId, long uploadDateMillis) throws PieceworkException {
         Task allowedTask = allowedTask(false);
         if (allowedTask == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
@@ -187,7 +187,7 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
         ProcessInstance instance = instance();
 
         Map<String, List<Value>> data = instance.getData();
-        Value value = ProcessInstanceUtility.firstMatchingFileOrLink(fieldName, data, fileId);
+        Value value = ProcessInstanceUtility.firstMatchingFileOrLink(fieldName, data, fileId, uploadDateMillis);
 
         if (value != null) {
             if (value instanceof File) {

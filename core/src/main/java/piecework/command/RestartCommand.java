@@ -17,7 +17,7 @@ package piecework.command;
 
 import org.apache.log4j.Logger;
 import piecework.Constants;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.OperationResult;
 import piecework.engine.ProcessEngineFacade;

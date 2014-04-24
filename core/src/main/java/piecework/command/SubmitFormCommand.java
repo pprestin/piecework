@@ -16,7 +16,7 @@
 package piecework.command;
 
 import piecework.Constants;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;

@@ -296,6 +296,7 @@ public class SearchRepositoryProvider implements SearchProvider {
             map.put("candidateAssignees", task.getCandidateAssignees());
 
             map.put("formInstanceId", task.getTaskInstanceId());
+            map.put("taskId", task.getTaskInstanceId());
             map.put("taskClaimTime", task.getClaimTime());
             map.put("taskDueDate", task.getDueDate());
             map.put("taskStartTime", task.getStartTime());

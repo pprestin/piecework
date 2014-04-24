@@ -127,7 +127,7 @@
 //                            });
                         };
                         scope.openModal = function() {
-                            dialogs.openAssignModal(scope.forms);
+                            dialogs.openAssignModal([scope.form]);
                         };
                     },
                     controller: ['$scope', function(scope) {
@@ -169,7 +169,6 @@
                     scope: {
                         form: '='
                     },
-                    templateUrl: 'templates/attachments.html',
                     link: function (scope, element) {
                         console.log("Initialized wfAttachments");
                         if (typeof(scope.state) == 'undefined') {
@@ -211,7 +210,40 @@
                             scope.state.isViewingAttachments = !scope.state.isViewingAttachments;
                             scope.$root.$broadcast('wfEvent:toggle-attachments', scope.state.isViewingAttachments);
                         });
-                    }
+                    },
+                    template:
+                        '<div data-ng-show="state.isViewingAttachments" class="pw-attachments col-md-4">\n' +
+                        '        <div class="panel panel-default">\n' +
+                        '            <div class="panel-heading">\n' +
+                        '                <button data-ng-click="editAttachments()" class="close" type="button"><i ng-class="state.isEditingAttachments ? \'fa fa-unlock\' : \'fa fa-lock\'" class="fa fa-lock"></i></button>\n' +
+                        '                <span class="lead">Notes</span>\n' +
+                        '            </div>\n' +
+                        '            <ul class="list-group">\n' +
+                        '                <li class="list-group-item" data-ng-show="!state.attachments">No attachments</li>\n' +
+                        '                <li class="list-group-item" data-ng-repeat="attachment in state.attachments">\n' +
+                        '                    <div class="row">\n' +
+                        '                        <div class="col-md-12">\n' +
+                        '                            <button data-ng-show="state.isEditingAttachments" data-ng-click="deleteAttachment(attachment)" class="delete-attachments-button text-danger close " type="button">&times;</button>\n' +
+                        '                            <span data-ng-if="attachment.name == \'comment\'" title="{{attachment.description}}">{{attachment.description}}</span>\n' +
+                        '                            <span data-ng-if="attachment.name != \'comment\'" class="pw-attachment-file">\n' +
+                        '                                <i class="fa fa-download"></i> <a href="{{attachment.link}}" target="_self" title="{{attachment.description}}">{{attachment.name}}</a>\n' +
+                        '                            </span>\n' +
+                        '                        </div>\n' +
+                        '                    </div>\n' +
+                        '                    <div class="row">\n' +
+                        '                        <div class="col-md-12">\n' +
+                        '                            <div class="pull-right text-muted">{{attachment.user.displayName}}</div>\n' +
+                        '                        </div>\n' +
+                        '                    </div>\n' +
+                        '                    <div class="row">\n' +
+                        '                        <div class="col-md-12">\n' +
+                        '                            <div class="pull-right text-muted">{{attachment.lastModified|date:\'MMM d, y H:mm\'}}</div>\n' +
+                        '                        </div>\n' +
+                        '                    </div>\n' +
+                        '                </li>\n' +
+                        '            </ul>\n' +
+                        '        </div>\n' +
+                        '    </div>'
                 }
             }
         ])
@@ -763,6 +795,10 @@
                     scope: {
                         'name': '@',
                         'label': '@',
+                        'imgclass': '@',
+                        'btnclass': '@',
+                        'btnleft': '@',
+                        'btntext': '@',
                         'image': '@',
                         'disabled': '@',
                         'required': '@',
@@ -775,6 +811,9 @@
                         scope.duplicating = false;
                         scope.editing = false;
                         scope.files = [];
+
+//                        if (typeof(scope.btntext) == 'undefined')
+//                            scope.btntext = 'Add';
                     }],
                     link: function (scope, element, attr) {
                         scope.$on('wfEvent:form-loaded', function(event, form) {
@@ -894,7 +933,7 @@
                         '               <div>{{error}}</div>' +
                         '           </li>' +
                         '           <li data-ng-hide="files" class="list-group-item"><span class="text-muted">No documents</span></li>' +
-                        '           <li data-ng-show="duplicating" class="list-group-item list-group-item-danger">' +
+                        '           <li data-ng-show="duplicating" class="list-group-item list-group-item-danger wf-file-dlg">' +
                         '               <div>Uploading {{duplicateFileName}} will permanently overwrite the existing version of this file. Are you sure?</div>' +
                         '               <div class="btn-toolbar pull-right">' +
                         '                   <button data-ng-click="sendFile()" class="btn btn-danger btn-xs" type="button">Yes, overwrite it</button>' +
@@ -902,7 +941,7 @@
                         '               </div>' +
                         '               <div class="clearfix"></div>' +
                         '           </li>' +
-                        '           <li data-ng-show="deleting" class="list-group-item list-group-item-danger">' +
+                        '           <li data-ng-show="deleting" class="list-group-item list-group-item-danger wf-file-dlg">' +
                         '               <div>Deleting {{fileToDelete.name}} will permanently remove it from the repository. Are you sure?</div>' +
                         '               <div class="btn-toolbar pull-right">' +
                         '                   <button data-ng-click="deleteFile(fileToDelete)" class="btn btn-danger btn-xs" type="button">Yes, delete it</button>' +
@@ -910,17 +949,17 @@
                         '               </div>' +
                         '               <div class="clearfix"></div>' +
                         '           </li>' +
-                        '           <li data-ng-repeat="file in files" class="list-group-item">' +
+                        '           <li data-ng-repeat="file in files" class="list-group-item wf-file-list">' +
                         '               <div>' +
+                        '                   <div data-ng-if="image"><img  data-ng-class="imgclass" data-ng-src="{{file.link}}" alt="" /><br /></div>' +
                         '                   <i data-ng-click="showDetails(file)" data-ng-class="file.detailed ? \'fa-angle-up\' : \'fa-angle-down\'" data-ng-hide="editing" class="fa pull-right" style="cursor:pointer;padding-top: 4px"></i>' +
-                        '                   <div data-ng-if="image"><img data-wf-image="{{name}}" class="" data-ng-src="{{file.link}}" alt="" /><br /></div>' +
                         '                   <a data-ng-href="{{file.link}}" data-ng-class="checkedOut ? \'text-danger\' : \'\'" class="wf-file-link"><i data-ng-hide="editing" class="fa fa-cloud-download"></i> {{file.name}}</a>&nbsp;&nbsp;&nbsp;' +
                         '                   <div data-ng-click="checkinFile(file)" data-ng-hide="editing || !checkedOut" class="btn btn-default btn-xs">' +
                         '                       <span class="fa-stack"><i class="fa fa-key fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x text-danger"></i></span></div>' +
                         '                   <div data-ng-click="checkoutFile(file)" data-ng-hide="cannotCheckout || editing || checkedOut" class="btn btn-default btn-xs"><i class="fa fa-key"></i> Checkout</div>' +
                         '                   <i data-ng-click="deleteFile(file)" data-ng-show="editing" class=\"fa fa-times text-danger wf-delete-item pull-right\" title=\"Delete item\" style=\"font-size:14px;padding-top: 4px\"></i>' +
                         '               </div>' +
-                        '               <div data-ng-show="file.detailed"><p/>' +
+                        '               <div data-ng-show="file.detailed" class="wf-file-detail"><p/>' +
                         '                   <table class="table table-condensed">' +
                         '                       <thead><tr><th>Version</th><th>Upload date</th><th>Filer</th></tr></thead>' +
                         '                       <tbody>' +
@@ -936,9 +975,9 @@
                         '               <div class="pull-left">' +
                         '                   <span data-wf-alert="{{name}}" class="text-danger"></span>' +
                         '               </div>' +
-                        '               <div class="btn-toolbar pull-right">' +
-                        '                   <div data-ng-class="checkedOut ? \'btn-danger\' : \'\'" class="btn btn-default btn-xs fileinput-button" role="button" type="button">' +
-                        '                       <i ng-class="sending ? \'fa-spinner fa-spin\' : \'fa-cloud-upload\'" class="fa"></i> Add' +
+                        '               <div data-ng-class="btnleft ? \'\' : \'pull-right\'" class="btn-toolbar">' +
+                        '                   <div data-ng-class="checkedOut ? \'btn-danger {{btnclass}}\' : \'{{btnclass}}\'" class="btn btn-default btn-xs fileinput-button wf-file-add-btn" role="button" type="button">' +
+                        '                       <i ng-class="sending ? \'fa-spinner fa-spin\' : \'fa-cloud-upload\'" class="fa"></i> <span data-ng-bind="btntext"></span>' +
                         '                       <input type="file" name="{{name}}" multiple="multiple" data-ng-change="fileChange()" data-ng-disabled="disabled || form.currentUser.userId !== form.task.assignee.userId" data-ng-model="files">' +
                         '                   </div>' +
                         '               </div>' +
@@ -1046,6 +1085,8 @@
                             var created = form.task != null ? form.task.startTime : null;
                             element.attr('data-wf-task-started', created);
                         };
+                        if (scope.form != null)
+                            scope.initialize(scope.form);
                         scope.$watch('form', function(modified, original) {
                             var form = modified;
                             if (form != null)
@@ -1303,6 +1344,114 @@
                             scope.form = form;
                         });
                     }
+                }
+            }
+        ])
+        .directive('wfNotes', ['$http', '$sce', '$window', 'attachmentService', 'dialogs', 'instanceService', 'notificationService', 'taskService', 'wfUtils', 'wizardService',
+            function($http, $sce, $window, attachmentService, dialogs, instanceService, notificationService, taskService, wfUtils, wizardService) {
+                return {
+                    restrict: 'AE',
+                    scope: {
+                        'disabled': '@',
+                        'required': '@',
+                        'state': '='
+                    },
+                    controller: ['$scope', function(scope) {
+                        scope.deleting = false;
+                        scope.editing = false;
+                    }],
+                    link: function (scope, element, attr) {
+                        scope.$on('wfEvent:form-loaded', function(event, form) {
+                            scope.form = form;
+                            if (form != null) {
+                                var data = form.data;
+                                $http.get($sce.trustAsResourceUrl(form.attachment))
+                                    .then(scope.refreshNotes);
+                                scope.disabled = form.state !== 'open' && form.state !== 'assigned';
+                            }
+                        });
+                        scope.deleteNote = function(note) {
+                            var url = note.link + '/removal.json';
+                            $http.post($sce.trustAsResourceUrl(url), null, {
+                                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                transformRequest: angular.identity
+                            })
+                            .success(scope.refreshNotes)
+                            .error(scope.errorNotes);
+                        };
+                        scope.doNotDeleteNote = function() {
+                            scope.deleting = false;
+                            scope.noteToDelete = null;
+                        };
+                        scope.verifyDeleteNote = function(note) {
+                            scope.deleting = true;
+                            note.detailed = false;
+                            scope.noteToDelete = note;
+                        };
+                        scope.edit = function() {
+                            scope.editing = !scope.editing;
+                        };
+                        scope.addComment = function() {
+                            scope.sending = true;
+                            var success = function($scope, data, status, headers, config, form, formData) {
+                                scope.refreshNotesCallback(data, status, headers, config);
+                            };
+                            instanceService.comment(scope, scope.form, scope.note, success, scope.errorNotes);
+                        };
+                        scope.errorNotes = function(message, status, headers, config) {
+                            scope.error = message.messageDetail;
+                            scope.doNotDeleteNote();
+                        };
+                        scope.refreshNotes = function() {
+                            $http.get($sce.trustAsResourceUrl(scope.form.attachment))
+                                .then(function(response) { scope.refreshNotesCallback(response.data); });
+                        };
+                        scope.refreshNotesCallback = function(data, status, headers, config) {
+                            scope.notes = data.list;
+                            scope.deleting = false;
+                            scope.noteToDelete = null;
+                            scope.sending = false;
+                            scope.note = '';
+                        };
+                        scope.showDetails = function(file) {
+                            file.detailed = !file.detailed;
+                        };
+                    },
+                    template:
+                        '       <ul class="list-group"> ' +
+                        '           <li data-ng-show="error" class="list-group-item list-group-item-danger">' +
+                        '               <button type=\"button\" class=\"close\" type=\"button\" data-ng-click=\"error = null\" aria-hidden=\"true\">&times;</button>' +
+                        '               <div>{{error}}</div>' +
+                        '           </li>' +
+                        '           <li data-ng-show="deleting" class="list-group-item list-group-item-danger wf-file-dlg">' +
+                        '               <div>Deleting note will permanently remove it. Are you sure?</div>' +
+                        '               <div class="btn-toolbar pull-right">' +
+                        '                   <button data-ng-click="deleteNote(noteToDelete)" class="btn btn-danger btn-xs" type="button">Yes, delete it</button>' +
+                        '                   <button data-ng-click="doNotDeleteNote()" class="btn btn-default btn-xs" type="button">Cancel</button>' +
+                        '               </div>' +
+                        '               <div class="clearfix"></div>' +
+                        '           </li>' +
+                        '           <li class="list-group-item">' +
+                        '               <ul class="wf-note-list">' +
+                        '                   <li data-ng-hide="notes" class="wf-note-fallback text-muted">No notes</li>' +
+                        '                   <li data-ng-repeat="note in notes" class="wf-note">' +
+                        '                       <button type="button" class="close" type="button" data-ng-click="verifyDeleteNote(note)" aria-hidden="true">&times;</button>' +
+                        '                       <div class="wf-note-detail">{{note.description}}</div>' +
+                        '                       <div class="wf-note-creator">{{note.user.displayName}}</div>' +
+                        '                       <div class="wf-note-date">{{note.lastModified|date:\'MMM d, y h:mm a\'}}</div>' +
+                        '                   </li>' +
+                        '               </ul>'+
+                        '           </li>' +
+                        '           <li class="list-group-item"><textarea data-ng-model="note" class="wf-note-textarea"></textarea></li>' +
+                        '           <li data-ng-hide="disabled" class="list-group-item">' +
+                        '               <div class="btn-toolbar pull-right">' +
+                        '                   <div data-ng-class="checkedOut ? \'btn-danger\' : \'\'" data-ng-click="addComment()" class="btn btn-default btn-xs fileinput-button wf-file-add-btn" role="button" type="button">' +
+                        '                       <i ng-class="sending ? \'fa-spinner fa-spin\' : \'fa-comment-o\'" class="fa"></i> Add' +
+                        '                   </div>' +
+                        '               </div>' +
+                        '               <div class="clearfix"></div>' +
+                        '           </li>' +
+                        '       </ul> '
                 }
             }
         ])
@@ -2083,9 +2232,10 @@
                     restrict: 'A',
                     scope: {
                         name : '@',
+                        placeholder: '@',
                         type : '@'
                     },
-                    template: '<span data-ng-repeat="value in values" data-ng-bind-html="value"></span>',
+                    template: '<span data-ng-hide="values" data-ng-bind="placeholder" class="text-muted"></span><span data-ng-repeat="value in values" data-ng-bind-html="value"></span>',
                     link: function (scope, element, attr) {
                         scope.values = [];
                         var name = attr.wfVariable;

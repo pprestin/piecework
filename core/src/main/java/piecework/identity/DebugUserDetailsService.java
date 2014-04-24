@@ -19,7 +19,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 import piecework.authorization.SuperUserAccessAuthority;
 import piecework.service.ProcessService;
 

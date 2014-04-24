@@ -109,10 +109,10 @@ public class UserInterfaceUtility {
             } else if (type.equals(Form.class)) {
                 Form form = Form.class.cast(t);
                 FormDisposition disposition = form.getDisposition();
-                if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
+//                if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
                     templateNameBuilder.append(form.getProcess().getProcessDefinitionKey());
-                else
-                    templateNameBuilder.append(type.getSimpleName());
+//                else
+//                    templateNameBuilder.append(type.getSimpleName());
             } else {
                 templateNameBuilder.append(type.getSimpleName());
             }

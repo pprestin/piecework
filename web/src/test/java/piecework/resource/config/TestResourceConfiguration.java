@@ -13,41 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.test.config;
+package piecework.resource.config;
 
 import org.mockito.Mockito;
 import org.owasp.validator.html.Policy;
 import org.springframework.cache.CacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.*;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
+import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.common.ServiceLocator;
 import piecework.Versions;
 import piecework.common.UuidGenerator;
+import piecework.config.PropertiesConfiguration;
 import piecework.config.ProviderConfiguration;
-import piecework.engine.ProcessEngineFacade;
+import piecework.content.concrete.InMemoryContentProviderReceiver;
+import piecework.engine.activiti.config.EngineConfiguration;
+import piecework.identity.DebugIdentityService;
 import piecework.identity.DebugUserDetailsService;
 import piecework.identity.IdentityHelper;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.concrete.ModelRepositoryProviderFactory;
-import piecework.repository.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
 import piecework.security.data.UserInputSanitizer;
+import piecework.service.IdentityService;
+import piecework.service.NotificationService;
 import piecework.settings.SecuritySettings;
 
+import java.io.IOException;
 import java.net.URL;
+
+import static org.mockito.Matchers.any;
 
 /**
  * @author James Renfro
  */
 @Configuration
-@Import({MockRepositoryConfiguration.class, ProviderConfiguration.class})
-@ComponentScan(basePackages = {"piecework.command", "piecework.form", "piecework.manager", "piecework.resource", "piecework.service", "piecework.settings"})
-public class IntegrationTestConfiguration {
+@Import({EngineConfiguration.class, FongoConfiguration.class, ProviderConfiguration.class})
+@ComponentScan(basePackages = {"piecework.command", "piecework.common", "piecework.component", "piecework.content", "piecework.engine", "piecework.form", "piecework.manager", "piecework.resource", "piecework.security", "piecework.service", "piecework.settings", "piecework.submission", "piecework.validation"})
+//@ComponentScan(basePackages= {"piecework"})
+public class TestResourceConfiguration {
 
     @Bean
     public AccessTracker accessTracker() {
@@ -72,6 +79,12 @@ public class IntegrationTestConfiguration {
     }
 
     @Bean
+    public IdentityService identityService(DebugUserDetailsService userDetailsService) {
+        return new DebugIdentityService(userDetailsService);
+    }
+
+    @Bean
+    @Primary
     public DebugUserDetailsService debugUserDetailsService(Environment environment, ServiceLocator serviceLocator) {
         return new DebugUserDetailsService(environment, serviceLocator);
     }
@@ -82,8 +95,13 @@ public class IntegrationTestConfiguration {
     }
 
     @Bean
-    public ProcessEngineFacade processEngineFacade() {
-        return Mockito.mock(ProcessEngineFacade.class);
+    public InMemoryContentProviderReceiver memoryContentProviderReceiver() {
+        return new InMemoryContentProviderReceiver();
+    }
+
+    @Bean
+    public NotificationService notificationService() {
+        return Mockito.mock(NotificationService.class);
     }
 
     @Bean
@@ -104,6 +122,13 @@ public class IntegrationTestConfiguration {
     @Bean
     public Versions versions() {
         return new Versions();
+    }
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
+        CustomPropertySourcesConfigurer configurer = new CustomPropertySourcesConfigurer();
+        configurer.setCustomLocations(environment);
+        return configurer;
     }
 
 }

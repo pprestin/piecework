@@ -140,7 +140,7 @@ public interface ProcessInstanceApplicationResource extends ApplicationResource 
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Produces("*/*")
-    Response readValue(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId, @QueryParam("inline") Boolean inline) throws PieceworkException;
+    Response readValue(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId, @QueryParam("uploadDate") String uploadDate, @QueryParam("inline") Boolean inline) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}")

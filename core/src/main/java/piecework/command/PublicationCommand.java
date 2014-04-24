@@ -17,7 +17,7 @@ package piecework.command;
 
 import org.apache.log4j.Logger;
 import piecework.Constants;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;

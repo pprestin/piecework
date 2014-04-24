@@ -18,7 +18,7 @@ package piecework.command;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Constants;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 import piecework.common.UuidGenerator;
 import piecework.content.ContentResource;
 import piecework.engine.ProcessEngineFacade;

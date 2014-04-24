@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import piecework.content.concrete.GridFSContentProviderReceiver;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
@@ -159,7 +160,10 @@ public class ApplicationConfiguration {
         return sf.create();
     }
 
-
+    @Bean
+    public GridFSContentProviderReceiver gridFSContentProviderReceiver() {
+        return new GridFSContentProviderReceiver();
+    }
 
 //    @Bean
 //    public JacksonJaxbJsonProvider jacksonJaxbJsonProvider() {

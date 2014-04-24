@@ -187,9 +187,20 @@ public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstance
     }
 
     @Override
-    public Response readValue(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId, Boolean inline) throws PieceworkException {
+    public Response readValue(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId, String rawUploadDate, Boolean inline) throws PieceworkException {
         AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
-        ContentResource contentResource = allowedTaskProvider.value(rawFieldName, rawValueId);
+
+        String uploadDate = sanitizer.sanitize(rawUploadDate);
+
+        long uploadDateMillis = -1l;
+        try {
+            if (uploadDate != null)
+                uploadDateMillis = Long.valueOf(uploadDate);
+        } catch (NumberFormatException nfe) {
+            LOG.error("Could not parse upload date of " + uploadDate);
+        }
+
+        ContentResource contentResource = allowedTaskProvider.value(rawFieldName, rawValueId, uploadDateMillis);
 
         boolean isInline = inline != null && inline.booleanValue();
         if (isInline)

@@ -27,7 +27,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 import piecework.authorization.AccessFactory;
 import piecework.identity.*;
 import piecework.ldap.*;

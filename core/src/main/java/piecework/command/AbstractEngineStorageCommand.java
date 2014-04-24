@@ -15,7 +15,7 @@
  */
 package piecework.command;
 
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;

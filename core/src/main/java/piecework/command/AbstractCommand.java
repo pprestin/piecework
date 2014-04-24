@@ -16,7 +16,7 @@
 package piecework.command;
 
 import piecework.Command;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 import piecework.exception.PieceworkException;
 import piecework.model.Entity;
 import piecework.persistence.ProcessProvider;

@@ -18,7 +18,7 @@ package piecework.command;
 import com.google.common.collect.Sets;
 import org.apache.log4j.Logger;
 import piecework.Constants;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 import piecework.enumeration.ActionType;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;

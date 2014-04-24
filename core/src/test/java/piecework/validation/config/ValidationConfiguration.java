@@ -25,7 +25,7 @@ import piecework.security.data.DataFilterService;
 import piecework.security.config.EncryptionTestConfiguration;
 import piecework.validation.ValidationFactory;
 import piecework.manager.StorageManager;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 
 /**
  * @author James Renfro

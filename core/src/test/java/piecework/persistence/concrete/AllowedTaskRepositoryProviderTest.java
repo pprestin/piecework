@@ -227,7 +227,7 @@ public class AllowedTaskRepositoryProviderTest {
 
     @Test
     public void verifyValue() throws Exception {
-        ContentResource value = allowedTaskProvider.value("SomeFile", "877");
+        ContentResource value = allowedTaskProvider.value("SomeFile", "877", -1);
         Assert.assertNotNull(value);
         String expected = "<html><body>Hello World</body></html>";
         String actual = IOUtils.toString(value.getInputStream());
@@ -236,7 +236,7 @@ public class AllowedTaskRepositoryProviderTest {
 
     @Test(expected = NotFoundError.class)
     public void verifyInvalidValue() throws Exception {
-        allowedTaskProvider.value("SomeFile", "233");
+        allowedTaskProvider.value("SomeFile", "233", -1l);
     }
 
     @Test

@@ -60,7 +60,7 @@ public class AllowedTaskProviderStub extends ProcessInstanceProviderStub impleme
     }
 
     @Override
-    public ContentResource value(String fieldName, String fileId) throws PieceworkException {
+    public ContentResource value(String fieldName, String fileId, long millis) throws PieceworkException {
         return null;
     }
 

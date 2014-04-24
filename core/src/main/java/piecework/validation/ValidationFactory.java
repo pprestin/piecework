@@ -37,7 +37,7 @@ import piecework.util.ModelUtility;
 import piecework.util.ValidationUtility;
 import piecework.util.ProcessInstanceUtility;
 import piecework.manager.StorageManager;
-import piecework.ServiceLocator;
+import piecework.common.ServiceLocator;
 
 import java.io.IOException;
 import java.util.*;
@@ -382,7 +382,9 @@ public class ValidationFactory {
                 if (values == null)
                     values = Collections.emptyList();
 
-                validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
+                // Ensure that something was actually submitted, even if it was a null value
+                if (submissionData.containsKey(fieldName))
+                    validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
             }
         }
     }

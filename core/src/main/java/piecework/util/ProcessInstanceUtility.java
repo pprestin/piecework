@@ -213,9 +213,12 @@ public class ProcessInstanceUtility {
         return null;
     }
 
-    public static Value firstMatchingFileOrLink(String name, Map<String, List<Value>> map, String valueId) {
+    public static Value firstMatchingFileOrLink(String name, Map<String, List<Value>> map, String valueId, long uploadDateMillis) {
         if (map != null && name != null && StringUtils.isNotEmpty(valueId)) {
             List<Value> values = map.get(name);
+
+            if (uploadDateMillis > 0l)
+                valueId = valueId + "?uploadDate=" + uploadDateMillis;
 
             if (values != null && !values.isEmpty()) {
                 for (Value value : values) {
@@ -234,9 +237,10 @@ public class ProcessInstanceUtility {
                         List<Version> versions = file.getVersions();
                         if (versions != null && !versions.isEmpty()) {
                             for (Version version : versions) {
-                                if (version != null && StringUtils.isNotEmpty(version.getContentId()) && valueId.equals(version.getContentId())) {
+                                String contentId = version.getContentId();
+                                if (version != null && StringUtils.isNotEmpty(contentId) && valueId.equals(contentId)) {
                                     File previous = new File.Builder(file)
-                                            .id(version.getContentId())
+                                            .id(contentId)
                                             .location(version.getLocation())
                                             .build();
                                     return previous;

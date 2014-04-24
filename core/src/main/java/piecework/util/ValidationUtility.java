@@ -16,26 +16,18 @@
 package piecework.util;
 
 import com.google.common.collect.Sets;
-import com.mongodb.MongoException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Constants;
-import piecework.Registry;
-import piecework.content.ContentResource;
+import piecework.common.Registry;
 import piecework.enumeration.FieldTag;
-import piecework.exception.BadRequestError;
-import piecework.exception.InternalServerError;
-import piecework.exception.MaxSizeExceededException;
-import piecework.exception.ValidationRuleException;
 import piecework.form.OptionResolver;
 import piecework.model.Constraint;
 import piecework.model.Field;
 import piecework.model.Option;
 import piecework.model.Value;
-import piecework.validation.Validation;
 import piecework.validation.ValidationRule;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 

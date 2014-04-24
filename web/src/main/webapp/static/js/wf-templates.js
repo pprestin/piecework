@@ -263,7 +263,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        </div>");
   $templateCache.put("templates/container.html",
     "    <wf-notifications></wf-notifications>\n" +
-    "    <h2>{{container.title}}</h2>\n" +
+    "    <div class=\"row\"><h2>{{container.title}}</h2></div>\n" +
     "    <wf-status form=\"form\"></wf-status>\n" +
     "    <div ng-class=\"state.isViewingAttachments && 'wf-expanded col-md-8'\">\n" +
     "        <div class=\"row\">\n" +

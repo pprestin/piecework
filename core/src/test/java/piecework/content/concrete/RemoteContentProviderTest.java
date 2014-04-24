@@ -49,7 +49,7 @@ public class RemoteContentProviderTest {
     @Before
     public void setup() {
         contentProvider.init();
-        contentProvider.accessTracker = Mockito.mock(AccessTracker.class);
+//        contentProvider.accessTracker = Mockito.mock(AccessTracker.class);
     }
 
     @After
