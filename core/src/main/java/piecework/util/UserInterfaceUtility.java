@@ -108,11 +108,11 @@ public class UserInterfaceUtility {
                 templateNameBuilder.append(".").append(results.getResourceName());
             } else if (type.equals(Form.class)) {
                 Form form = Form.class.cast(t);
-                FormDisposition disposition = form.getDisposition();
-//                if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
+//                FormDisposition disposition = form.getDisposition();
+                if (form != null && form.getProcess() != null && StringUtils.isNotEmpty(form.getProcess().getProcessDefinitionKey()))
                     templateNameBuilder.append(form.getProcess().getProcessDefinitionKey());
-//                else
-//                    templateNameBuilder.append(type.getSimpleName());
+                else
+                    templateNameBuilder.append(type.getSimpleName());
             } else {
                 templateNameBuilder.append(type.getSimpleName());
             }
