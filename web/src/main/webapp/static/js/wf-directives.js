@@ -812,10 +812,9 @@
                         scope.editing = false;
                         scope.files = [];
 
-//                        if (typeof(scope.btntext) == 'undefined')
-//                            scope.btntext = 'Add';
                     }],
                     link: function (scope, element, attr) {
+                        scope.buttontext = scope.btntext != null ? scope.btntext : 'Add';
                         scope.$on('wfEvent:form-loaded', function(event, form) {
                             scope.form = form;
                             if (form != null) {
@@ -977,7 +976,7 @@
                         '               </div>' +
                         '               <div data-ng-class="btnleft ? \'\' : \'pull-right\'" class="btn-toolbar">' +
                         '                   <div data-ng-class="checkedOut ? \'btn-danger {{btnclass}}\' : \'{{btnclass}}\'" class="btn btn-default btn-xs fileinput-button wf-file-add-btn" role="button" type="button">' +
-                        '                       <i ng-class="sending ? \'fa-spinner fa-spin\' : \'fa-cloud-upload\'" class="fa"></i> <span data-ng-bind="btntext"></span>' +
+                        '                       <i ng-class="sending ? \'fa-spinner fa-spin\' : \'fa-cloud-upload\'" class="fa"></i> <span data-ng-bind="buttontext"></span>' +
                         '                       <input type="file" name="{{name}}" multiple="multiple" data-ng-change="fileChange()" data-ng-disabled="disabled || form.currentUser.userId !== form.task.assignee.userId" data-ng-model="files">' +
                         '                   </div>' +
                         '               </div>' +
@@ -2125,6 +2124,7 @@
                          '        <p>{{form.explanation.messageDetail}}</p>\n' +
                          '    </div></div></div>' +
                          '    </div><div class="row"><div data-ng-if="errmsg != null" class="alert alert-danger">\n' +
+                         '        <button type="button" class="close" data-ng-click="errmsg = null" aria-hidden="true">&times;</button>\n' +
                          '        <p>{{errmsg}}</p>\n' +
                          '    </div></div></div>'
                  }
