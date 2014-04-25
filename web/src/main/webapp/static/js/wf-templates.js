@@ -277,7 +277,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "    </div>\n" +
     "    <wf-attachments form=\"form\"></wf-attachments>\n");
    $templateCache.put("templates/field.html",
-    "    <label data-ng-if=\"field.label\">{{field.label}}</label>\n" +
+    "    <label data-ng-if=\"field.label\" data-ng-bind=\"field.label\"></label>\n" +
     "    <div data-ng-class=\"field.cssClass\" data-ng-repeat=\"n in range(1, field.maxInputs)\" data-ng-switch on=\"field.type\" class=\"form-group\">\n" +
     "        <div data-ng-switch-when=\"html\" data-ng-bind-html=\"field.defaultValue\">{{field.defaultValue}}</div>\n" +
     "        <div data-ng-switch-when=\"checkbox\">\n" +

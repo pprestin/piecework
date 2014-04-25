@@ -14,8 +14,8 @@ angular.module('wf',
             {{DYNAMIC_CONFIGURATION}}
         }
     ])
-    .controller('FormController', ['$http', '$location', '$sce', '$scope', '$window', 'fileUpload', 'formPageUri', 'formResourceUri', 'wizardService',
-        function($http, $location, $sce, scope, $window, fileUpload, formPageUri, formResourceUri, wizardService) {
+    .controller('FormController', ['$http', '$location', '$log', '$sce', '$scope', '$window', 'fileUpload', 'formPageUri', 'formResourceUri', 'wizardService',
+        function($http, $location, $log, $sce, scope, $window, fileUpload, formPageUri, formResourceUri, wizardService) {
 
             scope.isFormControllerScope = true;
 
@@ -242,7 +242,7 @@ angular.module('wf',
             };
             scope.$on('fileuploadadd', function(event, data) {
                 if (data.fileInput.context.id == null || data.fileInput.context.id !== 'attachmentFile') {
-                    console.log(data);
+                    $log.debug(data);
 
                     if (data.files != null && data.files.length > 0) {
                         scope.$root.$broadcast('wfEvent:fileuploadstart', data);

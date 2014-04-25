@@ -395,10 +395,12 @@ public class ValidationFactory {
 
     private <P extends ProcessDeploymentProvider> ContentResource saveOrReplace(P modelProvider, File file, Map<String, String> existingFileLocations, Validation.Builder validationBuilder, Field field, int numberOfFiles) throws PieceworkException, IOException {
 
-        boolean isReplace = StringUtils.isNotEmpty(file.getName()) && existingFileLocations.containsKey(file.getName());
+        boolean isReplace = (StringUtils.isNotEmpty(file.getName()) && existingFileLocations.containsKey(file.getName()));
 
         if (isReplace) {
             String location = existingFileLocations.get(file.getName());
+//            if (StringUtils.isEmpty(location) && (field != null && field.isReplace()) && existingFileLocations.size() == 1)
+//                location = existingFileLocations.values().iterator().next();
             // Can't actually replace if there isn't a location, so let it fall through to become a new file instead,
             // seems like the best option if this ever does happen
             if (StringUtils.isNotEmpty(location)) {

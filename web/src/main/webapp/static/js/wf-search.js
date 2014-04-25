@@ -10,8 +10,8 @@ angular.module('wf',
         'wf.directives',
         'wf.services'
     ])
-    .controller('SearchController', ['$filter', '$http', '$location', '$resource', '$sce', '$scope', '$window', 'localStorageService', 'fileUpload', 'wizardService',
-        function($filter, $http, $location, $resource, $sce, scope, $window, localStorageService, fileUpload, formPageUri, formResourceUri, wizardService) {
+    .controller('SearchController', ['$filter', '$http', '$location', '$log', '$resource', '$sce', '$scope', '$window', 'localStorageService', 'fileUpload', 'wizardService',
+        function($filter, $http, $location, $log, $resource, $sce, scope, $window, localStorageService, fileUpload, formPageUri, formResourceUri, wizardService) {
             scope.application = {
                 initialized: false,  // init flag
                 bucketList: [],
@@ -59,7 +59,7 @@ angular.module('wf',
             };
             var criteria = localStorageService.get("criteria");
             if (criteria !== null) {
-                console.log("Retrieving saved criteria");
+                $log.debug("Retrieving saved criteria");
                 scope.application.criteria = criteria;
             } else {
                 criteria = scope.application.criteria;
@@ -257,7 +257,7 @@ angular.module('wf',
             };
             scope.SearchResponse = $resource('./form', {processStatus:'@processStatus'});
             scope.application.search = function() {
-                console.log("Searching...");
+                $log.debug("Searching...");
                 var criteria = {};
                 if (scope.application.criteria != null)
                     criteria = scope.application.criteria;

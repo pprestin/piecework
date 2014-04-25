@@ -462,6 +462,8 @@ public class ProcessInstance implements Serializable {
                 }
             }
 
+            if (StringUtils.isNotEmpty(this.processInstanceId))
+                this.keywords.add(this.processInstanceId);
             if (StringUtils.isNotEmpty(this.processInstanceLabel))
                 this.keywords.add(this.processInstanceLabel.toLowerCase());
             if (StringUtils.isNotEmpty(this.alias))

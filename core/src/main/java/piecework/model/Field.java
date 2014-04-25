@@ -122,6 +122,8 @@ public class Field implements Serializable, Comparable<Field> {
     @JsonIgnore
     private final boolean isDeleted;
 
+    private final boolean replace;
+
     private Field() {
         this(new Field.Builder(), new ViewContext());
     }
@@ -154,6 +156,7 @@ public class Field implements Serializable, Comparable<Field> {
         this.options = builder.options != null ? Collections.unmodifiableList(builder.options) : null;
         this.link = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.name) : null;
         this.metadataTemplates = builder.metadataTemplates != null ? Collections.unmodifiableMap(builder.metadataTemplates) : null;
+        this.replace = builder.replace;
     }
 
     public String getFieldId() {
@@ -273,6 +276,10 @@ public class Field implements Serializable, Comparable<Field> {
         return visible;
     }
 
+    public boolean isReplace() {
+        return replace;
+    }
+
     @Override
     public boolean equals(Object o) {
         Field other = Field.class.cast(o);
@@ -331,6 +338,7 @@ public class Field implements Serializable, Comparable<Field> {
         private Map<String, String> metadataTemplates;
         private int ordinal;
         private boolean isDeleted;
+        private boolean replace;
 
         public Builder() {
             super();
@@ -346,6 +354,7 @@ public class Field implements Serializable, Comparable<Field> {
             this.constraints = new ArrayList<Constraint>();
             this.options = new ArrayList<Option>();
             this.visible = true;
+            this.replace = false;
         }
 
         public Builder(Field field, Sanitizer sanitizer) {
@@ -375,6 +384,7 @@ public class Field implements Serializable, Comparable<Field> {
             this.ordinal = field.ordinal;
             this.isDeleted = field.isDeleted;
             this.visible = field.visible;
+            this.replace = field.replace;
 
             if (field.constraints != null && !field.constraints.isEmpty()) {
             	this.constraints = new ArrayList<Constraint>(field.constraints.size());
@@ -562,6 +572,11 @@ public class Field implements Serializable, Comparable<Field> {
 
         public Builder visible() {
             this.visible = true;
+            return this;
+        }
+
+        public Builder replace() {
+            this.replace = true;
             return this;
         }
 

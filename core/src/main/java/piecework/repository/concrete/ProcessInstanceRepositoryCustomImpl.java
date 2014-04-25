@@ -131,7 +131,8 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     public boolean update(String id, String engineProcessInstanceId) {
         WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(id)),
                 new Update().set("engineProcessInstanceId", engineProcessInstanceId)
-                            .set("lastModifiedTime", new Date()),
+                            .set("lastModifiedTime", new Date())
+                            .addToSet("keywords", id),
                 ProcessInstance.class);
         String error = result.getError();
         if (StringUtils.isNotEmpty(error)) {
@@ -194,7 +195,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
                 .set("applicationStatus", applicationStatus)
                 .set("processStatus", Constants.ProcessStatuses.COMPLETE)
                 .set("lastModifiedTime", new Date());
-        include(update, data);
+        include(update, data, id);
         return mongoOperations.findAndModify(new Query(where("_id").is(id)),
                 update,
                 OPTIONS,
@@ -209,7 +210,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
             update.set("applicationStatusExplanation", applicationStatusExplanation);
 
         include(update, attachments);
-        include(update, data);
+        include(update, data, id);
         include(update, label);
         include(update, submission);
         includeMessages(update, messages);
@@ -253,7 +254,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         }
     }
 
-    private void include(Update update, Map<String, List<Value>> data) {
+    private void include(Update update, Map<String, List<Value>> data, String id) {
         if (data != null && !data.isEmpty()) {
             MongoConverter converter = mongoOperations.getConverter();
             MongoTypeMapper typeMapper = converter.getTypeMapper();
@@ -293,6 +294,8 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
                 for (String keyword : keywords) {
                     eachList.add(keyword);
                 }
+                if (StringUtils.isNotEmpty(id))
+                    eachList.add(id);
                 update.addToSet(
                         "keywords",
                         BasicDBObjectBuilder.start("$each", eachList).get()

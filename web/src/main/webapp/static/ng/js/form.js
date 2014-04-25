@@ -1038,9 +1038,9 @@ angular.module('Form',
             }]);
         }
     ])
-    .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'attachmentService', 'notificationService', 'personService', 'taskService', 'wizardService', 'dialogs',
-        function($scope, $window, $location, $resource, $http, $routeParams, attachmentService, notificationService, personService, taskService, wizardService, dialogs) {
-            console.log('started', 'Form controller started');
+    .controller('FormController', ['$scope', '$window', '$location', '$log', '$resource', '$http', '$routeParams', 'attachmentService', 'notificationService', 'personService', 'taskService', 'wizardService', 'dialogs',
+        function($scope, $window, $location, $log, $resource, $http, $routeParams, attachmentService, notificationService, personService, taskService, wizardService, dialogs) {
+            $log.debug('started', 'Form controller started');
             $scope.context = window.piecework.context;
             $scope.assignTo = function(userId) {
                 var success = function(scope, data, status, headers, config, form, assignee) {
