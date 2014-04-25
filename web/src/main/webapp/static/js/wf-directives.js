@@ -1160,6 +1160,148 @@
                 }
             }
         ])
+        .directive('wfLinks', ['$http', '$sce', '$window', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wfUtils', 'wizardService',
+            function($http, $sce, $window, attachmentService, dialogs, notificationService, taskService, wfUtils, wizardService) {
+                return {
+                    restrict: 'AE',
+                    scope: {
+                        'name': '@',
+                        'label': '@',
+                        'imgclass': '@',
+                        'btnclass': '@',
+                        'btnleft': '@',
+                        'btntext': '@',
+                        'image': '@',
+                        'disabled': '@',
+                        'required': '@',
+                        'state': '='
+                    },
+                    controller: ['$scope', function(scope) {
+                        scope.cannotCheckout = true;
+                        scope.checkedOut = false;
+                        scope.deleting = false;
+                        scope.duplicating = false;
+                        scope.editing = false;
+                        scope.files = [];
+
+                    }],
+                    link: function (scope, element, attr) {
+                        scope.buttontext = scope.btntext != null ? scope.btntext : 'Add';
+                        scope.$on('wfEvent:form-loaded', function(event, form) {
+                            scope.form = form;
+                            scope.url = null;
+                            if (form != null) {
+                                var container = form.container;
+                                if (container != null && container.fields != null) {
+                                    angular.forEach(container.fields, function(field) {
+                                        if (field.name != null && scope.name != null && field.name == scope.name)
+                                            scope.url = field.link;
+                                    });
+                                }
+                                var data = form.data;
+                                var values = typeof(data) !== 'undefined' ? data[scope.name] : null;
+                                scope.links = [];
+                                angular.forEach(values, function(link) {
+                                    link.detailed = false;
+                                    scope.links.push(link);
+                                });
+
+                                scope.disabled = form.state !== 'open' && form.state !== 'assigned';
+                            }
+                        });
+                        scope.deleteLink = function(link) {
+                            var url = link.link + '/removal.json';
+                            $http.post($sce.trustAsResourceUrl(url), null, {
+                                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                transformRequest: angular.identity
+                            })
+                            .success(scope.refreshLinks)
+                            .error(scope.errorLinks);
+                        };
+                        scope.doNotDeleteLink = function() {
+                            scope.deleting = false;
+                            scope.linkToDelete = null;
+                        };
+                        scope.verifyDeleteLink = function(link) {
+                            scope.deleting = true;
+                            link.detailed = false;
+                            scope.linkToDelete = link;
+                        };
+                        scope.edit = function() {
+                            scope.editing = !scope.editing;
+                        };
+                        scope.addLink = function() {
+                            if (scope.link != null && scope.link != '') {
+                                scope.sending = true;
+                                if (scope.url != null) {
+                                    $http.post($sce.trustAsResourceUrl(scope.url), scope.link, {
+                                        headers: {'Content-Type': 'text/plain'},
+                                        transformRequest: angular.identity
+                                    })
+                                    .success(scope.refreshLinks)
+                                    .error(scope.errorLinks);
+                                }
+                            }
+                        };
+                        scope.errorLinks = function(message, status, headers, config) {
+                            scope.error = message.messageDetail;
+                            scope.doNotDeleteLink();
+                        };
+                        scope.refreshLinks = function() {
+                            if (scope.url != null) {
+                                $http.get($sce.trustAsResourceUrl(scope.url))
+                                    .then(function(response) { scope.refreshLinksCallback(response.data); });
+                            }
+                        };
+                        scope.refreshLinksCallback = function(data, status, headers, config) {
+                            scope.links = data.list;
+                            scope.deleting = false;
+                            scope.linkToDelete = null;
+                            scope.sending = false;
+                            scope.link = '';
+                        };
+                        scope.showDetails = function(link) {
+                            link.detailed = !link.detailed;
+                        };
+                    },
+                    template:
+                        '       <ul class="list-group"> ' +
+                        '           <li data-ng-show="error" class="list-group-item list-group-item-danger">' +
+                        '               <button type=\"button\" class=\"close\" type=\"button\" data-ng-click=\"error = null\" aria-hidden=\"true\">&times;</button>' +
+                        '               <div>{{error}}</div>' +
+                        '           </li>' +
+                        '           <li data-ng-show="deleting" class="list-group-item list-group-item-danger wf-file-dlg">' +
+                        '               <div>Deleting link will permanently remove it. Are you sure?</div>' +
+                        '               <div class="btn-toolbar pull-right">' +
+                        '                   <button data-ng-click="deleteLink(linkToDelete)" class="btn btn-danger btn-xs" type="button">Yes, delete it</button>' +
+                        '                   <button data-ng-click="doNotDeleteLink()" class="btn btn-default btn-xs" type="button">Cancel</button>' +
+                        '               </div>' +
+                        '               <div class="clearfix"></div>' +
+                        '           </li>' +
+                        '           <li class="list-group-item">' +
+                        '               <ul class="wf-note-list">' +
+                        '                   <li data-ng-hide="links" class="wf-note-fallback text-muted">No links</li>' +
+                        '                   <li data-ng-repeat="link in links" class="wf-link">' +
+                        '                       <button type="button" class="close" type="button" data-ng-click="verifyDeleteLink(link)" aria-hidden="true">&times;</button>' +
+                        '                       <div class="wf-link-detail"><i class="fa fa-external-link"></i> <a href="{{link.description}}" target="_blank">{{link.description}}</a></div>' +
+//                        '                       <div class="wf-note-creator">{{link.user.displayName}}</div>' +
+//                        '                       <div class="wf-note-date">{{link.lastModified|date:\'MMM d, y h:mm a\'}}</div>' +
+                        '                   </li>' +
+                        '               </ul>'+
+                        '           </li>' +
+                        '           <li class="list-group-item"><input data-ng-model="link" class="wf-link" type="text"/></li>' +
+                        '           <li data-ng-hide="disabled" class="list-group-item">' +
+                        '               <div class="btn-toolbar pull-right">' +
+                        '                   <div data-ng-class="checkedOut ? \'btn-danger\' : \'\'" data-ng-click="addLink()" class="btn btn-default btn-xs fileinput-button wf-file-add-btn" role="button" type="button">' +
+                        '                       <i ng-class="sending ? \'fa-spinner fa-spin\' : \'fa-external-link\'" class="fa"></i> Add' +
+                        '                   </div>' +
+                        '               </div>' +
+                        '               <div class="clearfix"></div>' +
+                        '           </li>' +
+                        '       </ul> '
+                }
+            }
+        ])
         .directive('wfList', ['$http', '$sce', 'attachmentService', 'dateFilter',
             function($http, $sce, attachmentService, dateFilter) {
                 return {
@@ -1370,6 +1512,18 @@
                 }
             }
         ])
+        .directive('wfNoteScroller', [
+            function() {
+                return {
+                    link: function (scope, element, attr) {
+                        if (scope.$last) {
+                            var $noteList = element.closest('.wf-note-list');
+                            $noteList.scrollTop($noteList[0].scrollHeight);
+                        }
+                    }
+                }
+            }
+        ])
         .directive('wfNotes', ['$http', '$sce', '$window', 'attachmentService', 'dialogs', 'instanceService', 'notificationService', 'taskService', 'wfUtils', 'wizardService',
             function($http, $sce, $window, attachmentService, dialogs, instanceService, notificationService, taskService, wfUtils, wizardService) {
                 return {
@@ -1415,11 +1569,13 @@
                             scope.editing = !scope.editing;
                         };
                         scope.addComment = function() {
-                            scope.sending = true;
-                            var success = function($scope, data, status, headers, config, form, formData) {
-                                scope.refreshNotesCallback(data, status, headers, config);
-                            };
-                            instanceService.comment(scope, scope.form, scope.note, success, scope.errorNotes);
+                            if (scope.note != null && scope.note != '') {
+                                scope.sending = true;
+                                var success = function($scope, data, status, headers, config, form, formData) {
+                                    scope.refreshNotesCallback(data, status, headers, config);
+                                };
+                                instanceService.comment(scope, scope.form, scope.note, success, scope.errorNotes);
+                            }
                         };
                         scope.errorNotes = function(message, status, headers, config) {
                             scope.error = message.messageDetail;
@@ -1457,11 +1613,11 @@
                         '           <li class="list-group-item">' +
                         '               <ul class="wf-note-list">' +
                         '                   <li data-ng-hide="notes" class="wf-note-fallback text-muted">No notes</li>' +
-                        '                   <li data-ng-repeat="note in notes" class="wf-note">' +
+                        '                   <li data-ng-repeat="note in notes" data-wf-note-scroller class="wf-note">' +
                         '                       <button type="button" class="close" type="button" data-ng-click="verifyDeleteNote(note)" aria-hidden="true">&times;</button>' +
                         '                       <div class="wf-note-detail">{{note.description}}</div>' +
                         '                       <div class="wf-note-creator">{{note.user.displayName}}</div>' +
-                        '                       <div class="wf-note-date">{{note.lastModified|date:\'MMM d, y h:mm a\'}}</div>' +
+                        '                       <div class="wf-note-date" data-wf-last-modified="{{note.lastModified}}">{{note.lastModified|date:\'MMM d, y h:mm a\'}}</div>' +
                         '                   </li>' +
                         '               </ul>'+
                         '           </li>' +

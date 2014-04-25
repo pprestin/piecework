@@ -112,6 +112,8 @@ public class SearchRepositoryProvider implements SearchProvider {
         if (allowedProcesses == null || allowedProcesses.isEmpty())
             return response;
 
+
+
         List<Process> alphabetical = new ArrayList<Process>(allowedProcesses);
         Collections.sort(alphabetical, new Comparator<Process>() {
             @Override

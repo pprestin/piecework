@@ -44,6 +44,7 @@ import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -145,6 +146,17 @@ public class SubmissionStorageService {
                 // Don't bother to store empty urls
                 if (StringUtils.isEmpty(value))
                     return false;
+                try {
+                    URI uri = URI.create(value);
+
+                    if (StringUtils.isEmpty(uri.getScheme()))
+                        value = "http://" + uri.toString();
+                    else
+                        value = uri.toString();
+
+                } catch (IllegalArgumentException iae) {
+                    LOG.warn("Unable to format " + value + " as a URI");
+                }
 
                 String id = uuidGenerator.getNextId();
                 String description = submissionBuilder.getDescription(name);
@@ -156,6 +168,7 @@ public class SubmissionStorageService {
                         .description(description)
                         .contentType("text/url")
                         .build();
+
             }
 
             if (fieldSubmissionType == FieldSubmissionType.RESTRICTED) {
@@ -189,16 +202,18 @@ public class SubmissionStorageService {
                 else
                     submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT) {
-                LOG.info("Processing attachment " + name);
-                if (file == null) {
-                    file = new File.Builder()
-                            .name(name)
-                            .contentType(MediaType.TEXT_PLAIN)
-                            .description(value)
-                            .filerId(actingAsId)
-                            .build();
+                if (StringUtils.isNotEmpty(value)) {
+                    LOG.info("Processing attachment " + name);
+                    if (file == null) {
+                        file = new File.Builder()
+                                .name(name)
+                                .contentType(MediaType.TEXT_PLAIN)
+                                .description(value)
+                                .filerId(actingAsId)
+                                .build();
+                    }
+                    submissionBuilder.attachment(file);
                 }
-                submissionBuilder.attachment(file);
             }
 
             return true;

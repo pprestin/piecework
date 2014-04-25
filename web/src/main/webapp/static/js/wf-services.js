@@ -857,7 +857,10 @@ angular.module('wf.services',
                                     if (model != null && model[0] == attrs.value)
                                         element.prop('checked', true);
                                 } else {
-                                    element.val(model[0]);
+                                    if (attrs.disabled && typeof(model[0]['displayName']) !== 'undefined')
+                                        element.val(model[0].displayName);
+                                    else
+                                        element.val(model[0]);
                                 }
                             }
                         }

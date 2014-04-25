@@ -277,8 +277,10 @@ public class ValidationFactory {
                 int numberOfFiles = 0;
                 Map<String, String> existingFileLocations = new HashMap<String, String>();
                 Map<String, List<Version>> previousVersionMap = new HashMap<String, List<Version>>();
+                boolean isReplaceInPlace = (field != null && field.isReplace());
+
                 // File fields are special -- instead of replacing the values, it's necessary to append them to the end of the previous values
-                if (previousValues != null && !previousValues.isEmpty()) {
+                if (!isReplaceInPlace && previousValues != null && !previousValues.isEmpty()) {
                     // Obviously these won't have a ContentResource attached, and shouldn't be re-stored to the repository, but then need to be
                     // added to the validation list unless we want them to disappear
                     for (Value previousValue : previousValues) {
@@ -303,8 +305,12 @@ public class ValidationFactory {
                             File file = File.class.cast(value);
 
                             // Don't bother to attach a file if it's a null stream
-                            if (file.getContentResource() == null || file.getContentResource().getInputStream() == null)
+                            if (file.getContentResource() == null || file.getContentResource().getInputStream() == null)  {
+                                // Handle urls
+                                if (file.getContentType() != null && file.getContentType().equals("text/url"))
+                                    validationBuilder.formFileValue(fieldName, file);
                                 continue;
+                            }
 
 //                            boolean isReplace = StringUtils.isNotEmpty(file.getName()) && existingFileLocations.containsKey(file.getName());
                             ContentResource contentResource = saveOrReplace(modelProvider, file, existingFileLocations, validationBuilder, field, numberOfFiles);
@@ -399,8 +405,7 @@ public class ValidationFactory {
 
         if (isReplace) {
             String location = existingFileLocations.get(file.getName());
-//            if (StringUtils.isEmpty(location) && (field != null && field.isReplace()) && existingFileLocations.size() == 1)
-//                location = existingFileLocations.values().iterator().next();
+
             // Can't actually replace if there isn't a location, so let it fall through to become a new file instead,
             // seems like the best option if this ever does happen
             if (StringUtils.isNotEmpty(location)) {
