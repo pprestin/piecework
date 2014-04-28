@@ -18,16 +18,21 @@ package piecework.validation;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.common.ManyMap;
-import piecework.model.Field;
-import piecework.model.Message;
-import piecework.model.Value;
+import piecework.enumeration.ActionType;
+import piecework.exception.BadRequestError;
+import piecework.exception.PieceworkException;
+import piecework.model.*;
+import piecework.model.Process;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.test.ProcessDeploymentProviderStub;
+import piecework.submission.SubmissionTemplate;
 import piecework.test.config.IntegrationTestConfiguration;
 import piecework.util.ValidationUtility;
 import piecework.validation.config.ValidationConfiguration;
@@ -105,6 +110,68 @@ public class ValidationFactoryTest {
         Assert.assertEquals(1, messages.size());
         Assert.assertEquals("Field is required", messages.get(0).getText());
         Assert.assertTrue(validation.getData().isEmpty());
+    }
+
+    @Test
+    public void testValidateEmptyField() {
+
+        String fieldName1 = "TestField1";
+        String fieldName2 = "TestField2";
+
+        Field field1 = new Field.Builder()
+                .name(fieldName1)
+                .editable()
+                .required()
+                .build();
+        Field field2 = new Field.Builder()
+                .name(fieldName2)
+                .editable()
+                .build();
+
+        Submission submission = new Submission.Builder()
+                .formValue(fieldName1, "")
+                .attachment(new File.Builder()
+                        .description("Test")
+                        .build())
+                .actionType(ActionType.ATTACH)
+                .build();
+
+        ProcessDeployment deployment = new ProcessDeployment.Builder()
+                .deploymentId("1234")
+                .build();
+
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .deploy(new ProcessDeploymentVersion(deployment), deployment)
+                .build();
+
+        SubmissionTemplate template = new SubmissionTemplate.Builder(process, deployment)
+                .field(field1)
+                .field(field2)
+                .build();
+
+        Entity principal = Mockito.mock(User.class);
+
+        ProcessDeploymentProvider modelProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
+
+        BadRequestError badRequestError = null;
+        Validation validation = null;
+
+        try {
+            validation = validationFactory.validate(modelProvider, submission, template, "v1", true);
+
+
+        } catch (BadRequestError bre) {
+            badRequestError = bre;
+        } catch (PieceworkException e) {
+
+        }
+
+        List<Value> values = validation.getData().get(fieldName1);
+        Assert.assertEquals(1, values.size());
+
+        values = validation.getData().get(fieldName2);
+//        Assert.assertNull(values);
     }
 
 //    @Test
