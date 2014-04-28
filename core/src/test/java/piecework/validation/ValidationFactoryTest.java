@@ -171,7 +171,7 @@ public class ValidationFactoryTest {
         Assert.assertEquals(1, values.size());
 
         values = validation.getData().get(fieldName2);
-//        Assert.assertNull(values);
+        Assert.assertNull(values);
     }
 
 //    @Test

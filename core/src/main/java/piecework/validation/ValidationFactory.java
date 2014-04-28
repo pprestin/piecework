@@ -389,7 +389,7 @@ public class ValidationFactory {
                     values = Collections.emptyList();
 
                 // Ensure that something was actually submitted, even if it was a null value
-//                if (submissionData.containsKey(fieldName))
+                if (submissionData.containsKey(fieldName))
                     validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
             }
         }
