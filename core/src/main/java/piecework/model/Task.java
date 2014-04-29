@@ -84,6 +84,13 @@ public class Task implements Serializable, Comparable<Task> {
     @XmlTransient
     private final String assigneeId;
 
+    @XmlElement
+    @Transient
+    private final User initiator;
+
+    @XmlTransient
+    private final String initiatorId;
+
     @XmlElementWrapper(name="candidateAssignees")
     @XmlElementRef(name="candidateAssignee")
     @Transient
@@ -143,6 +150,8 @@ public class Task implements Serializable, Comparable<Task> {
         this.engineProcessInstanceId = builder.engineProcessInstanceId;
         this.assignee = builder.assignee;
         this.assigneeId = builder.assigneeId;
+        this.initiator = builder.initiator;
+        this.initiatorId = builder.initiatorId;
         this.candidateAssignees = Collections.unmodifiableList(builder.candidateAssignees);
         this.candidateAssigneeIds = Collections.unmodifiableSet(builder.candidateAssigneeIds);
         this.startTime = builder.startTime;
@@ -307,6 +316,14 @@ public class Task implements Serializable, Comparable<Task> {
 		return assignee;
 	}
 
+    public User getInitiator(){
+        return initiator;
+    }
+
+    public String getInitiatorId(){
+        return initiatorId;
+    }
+
 	public List<User> getCandidateAssignees() {
 		return candidateAssignees;
 	}
@@ -388,6 +405,8 @@ public class Task implements Serializable, Comparable<Task> {
         private String taskAction;
         private User assignee;
         private String assigneeId;
+        private User initiator;
+        private String initiatorId;
         private List<User> candidateAssignees;
         private Set<String> candidateAssigneeIds;
         private Date startTime;
@@ -420,6 +439,8 @@ public class Task implements Serializable, Comparable<Task> {
             this.engineProcessInstanceId = sanitizer.sanitize(task.engineProcessInstanceId);
             this.assignee = task.assignee != null ? new User.Builder(task.assignee, sanitizer).build() : null;
             this.assigneeId = task.assigneeId;
+            this.initiator = task.initiator != null ? new User.Builder(task.initiator, sanitizer).build() : null;
+            this.initiatorId = task.initiatorId;
             if (task.candidateAssignees != null && !task.candidateAssignees.isEmpty()) {
                 this.candidateAssignees = new ArrayList<User>(task.candidateAssignees.size());
                 for (User candidateAssignee : task.candidateAssignees) {
@@ -518,6 +539,19 @@ public class Task implements Serializable, Comparable<Task> {
             this.assigneeId = assigneeId;
             return this;
         }
+
+        public Builder initiator(User initiator) {
+            this.initiator = initiator;
+            if (initiator != null)
+                this.initiatorId = initiator.getUserId();
+            return this;
+        }
+
+        public Builder initiatorId(String initiatorId) {
+            this.initiatorId = initiatorId;
+            return this;
+        }
+
 
         public Builder candidateAssignee(User candidateAssignee) {
             if (this.candidateAssignees == null)

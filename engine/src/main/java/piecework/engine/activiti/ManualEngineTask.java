@@ -154,7 +154,8 @@ public class ManualEngineTask implements EngineTask {
             this.processDefinitionKey = String.class.cast(variables.get("PIECEWORK_PROCESS_DEFINITION_KEY"));
             this.processInstanceId = String.class.cast(variables.get("PIECEWORK_PROCESS_INSTANCE_ID"));
             this.engineProcessInstanceId = activityExecution.getProcessInstanceId();
-            this.taskId = activityExecution.getCurrentActivityId();
+            this.taskId = activityExecution.getId();
+            this.taskDefinitionKey = activityExecution.getCurrentActivityId();
             this.name = activityExecution.getCurrentActivityName();
             this.actionType = ActionType.NONE;
 

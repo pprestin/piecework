@@ -42,6 +42,12 @@ public class TaskFactory {
             User assignee = userMap.get(task.getAssigneeId());
             builder.assignee(assignee);
         }
+
+        if(StringUtils.isNotEmpty(task.getInitiatorId())){
+            User initiator = userMap.get(task.getInitiatorId());
+            builder.initiator(initiator);
+        }
+
         Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
         if (candidateAssigneeIds != null && !candidateAssigneeIds.isEmpty()) {
             for (String candidateAssigneeId : candidateAssigneeIds) {

@@ -34,6 +34,15 @@
                 <ref bean="customBpmnUserTaskParseHandler" />
             </list>
         </property>
+        <property name="typedEventListeners">
+            <map>
+                <entry key="ENTITY_CREATED,ENTITY_UPDATED,TASK_ASSIGNED,TASK_COMPLETED" >
+                    <list>
+                        <ref bean="subTaskCreateHandler" />
+                    </list>
+                </entry>
+            </map>
+        </property>
         <property name="customSessionFactories">
             <list>
                 <ref bean="ldapIdentitySessionFactory" />

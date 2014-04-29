@@ -53,8 +53,14 @@ public class ActivityUtility {
         if (task != null)
             activityKey = task.getTaskDefinitionKey();
 
-        if (activityKey != null)
+        if (activityKey != null){
+            //trim to get parent activity validation
+            if(activityKey.contains("_SubTask")){
+                activityKey = activityKey.substring(0, activityKey.indexOf("_SubTask"));
+            }
+
             activity = deployment.getActivity(activityKey);
+        }
 
         if (activity != null)
             return activity;

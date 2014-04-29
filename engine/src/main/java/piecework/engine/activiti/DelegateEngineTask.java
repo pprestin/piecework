@@ -38,12 +38,12 @@ public class DelegateEngineTask implements EngineTask {
     private final ActionType actionType;
 
     // More logic than normal for a constructor but all in the interest of gathering the right data together
-    public DelegateEngineTask(DelegateTask delegateTask) {
+    public DelegateEngineTask(DelegateTask delegateTask, String processDefinitionKey, String processInstanceID) {
         this.delegateTask = delegateTask;
         Map<String, Object> variables = delegateTask.getVariables();
 
-        this.processDefinitionKey = String.class.cast(variables.get("PIECEWORK_PROCESS_DEFINITION_KEY"));
-        this.processInstanceId = String.class.cast(variables.get("PIECEWORK_PROCESS_INSTANCE_ID"));
+        this.processDefinitionKey = StringUtils.isNotEmpty(processDefinitionKey)? processDefinitionKey:  String.class.cast(variables.get("PIECEWORK_PROCESS_DEFINITION_KEY"));
+        this.processInstanceId = StringUtils.isNotEmpty(processInstanceID)? processInstanceID : String.class.cast(variables.get("PIECEWORK_PROCESS_INSTANCE_ID"));
 
         this.taskDefinitionKey = delegateTask.getTaskDefinitionKey();
         String actionValue = StringUtils.isNotEmpty(taskDefinitionKey) ? String.class.cast(delegateTask.getVariableLocal(taskDefinitionKey + "_action")) : null;

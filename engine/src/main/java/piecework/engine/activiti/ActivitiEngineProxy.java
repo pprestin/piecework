@@ -21,6 +21,7 @@ import java.util.*;
 
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowElement;
+import org.activiti.bpmn.model.ManualTask;
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.history.*;
@@ -28,6 +29,7 @@ import org.activiti.engine.impl.bpmn.diagram.ProcessDiagramGenerator;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.runtime.*;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
 import org.activiti.engine.task.TaskQuery;
@@ -48,6 +50,7 @@ import piecework.model.*;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.model.Process;
+import piecework.model.ProcessInstance;
 import piecework.persistence.TaskProvider;
 import piecework.common.SearchCriteria;
 import piecework.repository.ProcessInstanceRepository;
@@ -173,7 +176,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, Validation validation, Entity principal) throws ProcessEngineException {
-        String userId = principal != null ? principal.getEntityId() : null;
+        //String userId = principal != null ? principal.getEntityId() : null;
+        String userId = validation.getSubmission() != null ? validation.getSubmission().getSubmitterId() : null; //use the act as
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
         if (deployment == null)
@@ -186,8 +190,19 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
             if (activitiTask != null)  {
                 Map<String, Object> variables = new HashMap<String, Object>();
+
+                String taskDefinition = activitiTask.getTaskDefinitionKey();
+                String executionId = activitiTask.getExecutionId();
+
+                //if subtask use parent variables
+                if(activitiTask.getParentTaskId() != null){
+                    org.activiti.engine.task.Task parentTask = processEngine.getTaskService().createTaskQuery().taskId(activitiTask.getParentTaskId()).singleResult();
+                    taskDefinition = parentTask.getTaskDefinitionKey();
+                    executionId = parentTask.getExecutionId();
+                }
+
                 if (action != null) {
-                    String variableName = activitiTask.getTaskDefinitionKey() + "_action";
+                    String variableName = taskDefinition + "_action";
                     variables.put(variableName, action.name());
                     processEngine.getTaskService().setVariableLocal(taskId, variableName, action.name());
                 }
@@ -197,7 +212,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 // determine which values should be passed to Activiti
                 Map<String, List<Value>> data = validation.getData();
                 variables(variables, data);
-                processEngine.getRuntimeService().setVariables(activitiTask.getExecutionId(), variables);
+                processEngine.getRuntimeService().setVariables(executionId, variables);
+
                 // Always assign the task to the user before completing it
                 String currentAssignee = activitiTask.getAssignee();
                 if ( StringUtils.isNotEmpty(userId) && ( currentAssignee == null || ! userId.equals(currentAssignee) ) )
@@ -217,8 +233,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public Task createSubTask(TaskProvider taskProvider, Validation validation) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
-        String userId = principal != null ? principal.getEntityId() : null;
+        //Entity principal = helper.getPrincipal();
+        String userId = validation.getSubmission().getSubmitterId() != null ? validation.getSubmission().getSubmitterId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
         Process process = taskProvider.process();
@@ -232,10 +248,19 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         try {
             org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().taskId(task.getTaskInstanceId()).singleResult();
 
+            org.activiti.engine.runtime.ProcessInstance p = processEngine.getRuntimeService().createProcessInstanceQuery().processInstanceId(activitiTask.getProcessInstanceId()).singleResult();
+
+            //Need to check what this process instance is....
+            String processInstanceId = (String)processEngine.getRuntimeService().getVariable(activitiTask.getProcessInstanceId(), "PIECEWORK_PROCESS_INSTANCE_ID");
+
             if (activitiTask != null)  {
                 Map<String, Object> variables = new HashMap<String, Object>();
                 Map<String, List<Value>> data = validation.getData();
                 variables(variables, data);
+
+                //String assignedUserId = data.get("adHocPerson").get(0).toString();
+                String assignedUserId = validation.getSubmission().getAssignee();
+                User user =  userDetailsService.getUser(assignedUserId);
 
                 org.activiti.engine.task.Task subTask =  processEngine.getTaskService().newTask();
                 subTask.setParentTaskId(task.getTaskInstanceId());
@@ -243,7 +268,26 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 processEngine.getRuntimeService().setVariables(activitiTask.getExecutionId(), variables);
                 processEngine.getTaskService().saveTask(subTask);
 
-                return convert(subTask, process, true);
+                //set the assignee
+                processEngine.getTaskService().setAssignee(subTask.getId(), assignedUserId);
+
+                Task subtask = convert(subTask, process, true);
+                Task.Builder b = new Task.Builder(subtask, new PassthroughSanitizer());
+
+                //backfill the process instance into the piecework version
+                b.engineProcessInstanceId(activitiTask.getProcessInstanceId());
+                b.processInstanceId(processInstanceId);
+
+
+                b.candidateAssignee(user);
+                b.assignee(user);
+
+                //set the creator
+                b.initiator(validation.getSubmission().getSubmitter());
+
+                //use daddy's task definition and append _SubTask
+                b.taskDefinitionKey(activitiTask.getTaskDefinitionKey() + "_SubTask");
+                return b.build();
             }
         } catch (ActivitiException exception) {
             throw new ProcessEngineException("Activiti unable to create sub task ", exception);
@@ -300,6 +344,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                         elementType = FlowElementType.SERVICE_TASK;
                     else if (flowElement instanceof org.activiti.bpmn.model.UserTask)
                         elementType = FlowElementType.USER_TASK;
+                    else if (flowElement instanceof  ManualTask)
+                        elementType = FlowElementType.MANUAL_TASK;
 
                     if (elementType != null) {
                         updated.flowElement(flowElementId, flowElement.getName(), elementType);

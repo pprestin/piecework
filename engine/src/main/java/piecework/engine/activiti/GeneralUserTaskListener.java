@@ -61,7 +61,7 @@ public class GeneralUserTaskListener implements TaskListener {
             return;
 
         // Wrap the task in interface that is engine independent
-        EngineTask engineTask = new DelegateEngineTask(delegateTask);
+        EngineTask engineTask = new DelegateEngineTask(delegateTask, "", "");
         StateChangeType event = EVENT_MAP.get(eventName);
         if (event != null) {
             if (LOG.isDebugEnabled())
